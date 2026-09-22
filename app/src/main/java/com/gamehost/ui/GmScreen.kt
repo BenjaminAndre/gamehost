@@ -113,6 +113,17 @@ fun GmScreen(
         // PresentationSurface, where a size-dependent branch would break the
         // one-state-two-renderers guarantee.
         BoxWithConstraints(modifier = Modifier.weight(1f)) {
+            // Read maxHeight HERE, not inside the Column below. BoxWithConstraintsScope
+            // and ColumnScope both carry @LayoutScopeMarker, so once ColumnScope is the
+            // innermost receiver the DslMarker rules make maxHeight unreachable without
+            // an explicit qualifier.
+            //
+            // The cap itself: in a Column the UNWEIGHTED child is measured first and
+            // takes what it asks for, so without this the preview's height is dictated
+            // entirely by the attached display's aspect ratio — and a tall one silently
+            // starves the weighted browser above it to zero height.
+            val previewMaxHeight = maxHeight * PREVIEW_MAX_HEIGHT_FRACTION
+
             if (maxWidth >= 840.dp) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ContentGrid(
@@ -148,12 +159,7 @@ fun GmScreen(
                         status = displayStatus,
                         modifier = Modifier
                             .fillMaxWidth()
-                            // Hard cap. In a Column the UNWEIGHTED child is measured
-                            // first and takes what it asks for, so without this the
-                            // preview's height is dictated entirely by the attached
-                            // display's aspect ratio — and a tall one silently starves
-                            // the weighted browser above it to zero height.
-                            .heightIn(max = maxHeight * PREVIEW_MAX_HEIGHT_FRACTION),
+                            .heightIn(max = previewMaxHeight),
                     )
                 }
             }
