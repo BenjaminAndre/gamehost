@@ -18,7 +18,7 @@ class MoonPhaseTest {
      * so a true new or full moon drifts up to about half a day either side of the mean. A
      * tighter bound would be asserting an accuracy this model does not claim.
      */
-    private const val ONE_DAY = 1.0 / 29.530588853
+    private val ONE_DAY = 1.0 / 29.530588853
 
     /** Phase is circular, so 0.98 and 0.02 are close. */
     private fun assertPhaseNear(expected: Double, actual: Double, tolerance: Double) {
