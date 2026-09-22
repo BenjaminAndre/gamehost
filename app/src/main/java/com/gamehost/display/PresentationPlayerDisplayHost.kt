@@ -174,21 +174,34 @@ class PresentationPlayerDisplayHost(
     /**
      * Pixel size of [display].
      *
-     * `maximumWindowMetrics` on a display context is the non-deprecated route and is
-     * rotation-aware. It falls back to the display mode's physical size, which is what
-     * a fixed external monitor reports anyway.
+     * `Display.getMode()` first, deliberately. It reports *that display's* own native
+     * resolution, which is exactly what the player surface is.
+     *
+     * `maximumWindowMetrics` on a display context looks like the more modern route, and
+     * it was the primary source here until it caused a real bug: it reports the bounds
+     * the **context** would be given, and for a simulated or freshly-attached display
+     * that can silently be the host device's own screen. It does not throw when it is
+     * wrong, so the fallback never fired — it just returned a plausible portrait size,
+     * which drove the preview's aspect ratio until the preview swallowed the whole GM
+     * screen. It stays only as a fallback.
+     *
+     * Returning 0×0 is safe: [PlayerDisplayStatus.Attached.aspectRatio] falls back to
+     * the default ratio rather than dividing by zero.
      */
-    private fun sizeOf(context: Context, display: Display): Pair<Int, Int> =
-        runCatching {
+    private fun sizeOf(context: Context, display: Display): Pair<Int, Int> {
+        val mode = display.mode
+        if (mode != null && mode.physicalWidth > 0 && mode.physicalHeight > 0) {
+            return mode.physicalWidth to mode.physicalHeight
+        }
+
+        return runCatching {
             val bounds = context.createDisplayContext(display)
                 .getSystemService(WindowManager::class.java)
                 .maximumWindowMetrics
                 .bounds
             bounds.width() to bounds.height()
-        }.getOrElse {
-            val mode = display.mode
-            mode.physicalWidth to mode.physicalHeight
-        }
+        }.getOrDefault(0 to 0)
+    }
 
     private fun dismissPresentation() {
         presentation?.let { runCatching { it.dismiss() } }

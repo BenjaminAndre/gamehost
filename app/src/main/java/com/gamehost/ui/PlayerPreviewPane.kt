@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gamehost.R
 import com.gamehost.display.PlayerDisplayStatus
@@ -96,12 +97,16 @@ fun PlayerPreviewPane(
             Text(
                 text = stringResource(
                     R.string.preview_display,
-                    status.name,
                     status.widthPx,
                     status.heightPx,
+                    status.name,
                 ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // One line: an unbounded caption wraps to three on a phone and eats
+                // height that belongs to the browser above it.
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

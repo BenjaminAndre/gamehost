@@ -30,7 +30,10 @@
 
     <!-- Player preview -->
     <string name="preview_no_display">Aucun écran joueur</string>
-    <string name="preview_display">%1$s · %2$d × %3$d</string>
+    <!-- Resolution first: it is the part the GM actually needs, and some display names
+         are long enough to be truncated (a simulated display is named, in full,
+         "Superposition n°1 : 1920 x 1080, 320 dpi"). -->
+    <string name="preview_display">%1$d × %2$d · %3$s</string>
 
     <!-- Control bar -->
     <string name="control_black">NOIR</string>
