@@ -1,0 +1,53 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Required to create/update the rolling "latest" release.
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # setup-gradle provisions Gradle itself, so the build does not depend on the
+      # wrapper JAR being present. Once Android Studio generates the wrapper and it
+      # is committed, `gradle` below can become `./gradlew` with no other change.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      # Tests gate the APK. This is the only place they ever run, so a suite that
+      # only ran on pull requests would never run at all.
+      - run: gradle test --no-daemon
+
+      - run: gradle assembleDebug --no-daemon
+
+      # Debug-signed on purpose: it sideloads with no keystore management, whereas an
+      # unsigned release APK will not install at all. The download URL is stable, so
+      # it can be bookmarked once on the tablet.
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          prerelease: true
+          files: app/build/outputs/apk/debug/app-debug.apk
+          body: |
+            Rolling debug build of `main` — commit ${{ github.sha }}.
+
+            Download `app-debug.apk` below and install it on the tablet.
+            You may need to allow installation from unknown sources for your browser.

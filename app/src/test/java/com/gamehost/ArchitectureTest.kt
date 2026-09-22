@@ -1,0 +1,81 @@
+package com.gamehost
+
+import java.io.File
+import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
+import org.junit.Test
+
+/**
+ * Enforces the package dependency rules from `ARCHITECTURE.md` by reading the source.
+ *
+ * Gamehost is a single Gradle module, so the compiler does not enforce these boundaries.
+ * Forty lines of test does, which is a great deal cheaper than four build files, four
+ * manifests and an `api`/`implementation` decision on every new type.
+ *
+ * The rule that matters most is the first one: keeping `content/` and `presentation/`
+ * free of `android.*` is exactly what lets the interesting logic be unit-tested here at
+ * all, with no Robolectric and no emulator.
+ */
+class ArchitectureTest {
+
+    private data class Rule(
+        val packagePath: String,
+        val forbidden: List<String>,
+        val exceptPaths: List<String> = emptyList(),
+    )
+
+    private val rules = listOf(
+        // Pure domain. content/saf is the single Android-touching leaf.
+        Rule("content", listOf("android.", "androidx.", "coil3.", "com.gamehost.ui"), listOf("content/saf")),
+        Rule("presentation", listOf("android.", "androidx.", "coil3.", "com.gamehost.ui")),
+
+        // The shared renderer must not know which window it is in, nor reach for UI.
+        Rule("render", listOf("com.gamehost.ui", "com.gamehost.display")),
+
+        // The player display is a renderer, not a screen.
+        Rule("display", listOf("com.gamehost.ui")),
+    )
+
+    @Test
+    fun `package dependencies point one way`() {
+        val located = findSourceRoot()
+        assumeTrue("Source root not found from ${File("").absolutePath}", located != null)
+        val sourceRoot = located!!
+
+        val violations = mutableListOf<String>()
+
+        rules.forEach { rule ->
+            val directory = File(sourceRoot, rule.packagePath)
+            if (!directory.isDirectory) return@forEach
+
+            directory.walkTopDown()
+                .filter { it.isFile && it.extension == "kt" }
+                .filterNot { file ->
+                    rule.exceptPaths.any { file.invariantPath().contains("/$it/") }
+                }
+                .forEach { file ->
+                    file.readLines()
+                        .filter { it.startsWith("import ") }
+                        .forEach { line ->
+                            val imported = line.removePrefix("import ").trim()
+                            rule.forbidden
+                                .filter { imported.startsWith(it) }
+                                .forEach { violations += "${rule.packagePath}/${file.name}: $imported" }
+                        }
+                }
+        }
+
+        assertTrue(
+            "Package dependency rules violated:\n" + violations.joinToString("\n"),
+            violations.isEmpty(),
+        )
+    }
+
+    private fun File.invariantPath(): String = path.replace(File.separatorChar, '/')
+
+    /** Gradle runs unit tests with the module directory as the working directory. */
+    private fun findSourceRoot(): File? = listOf(
+        "src/main/java/com/gamehost",
+        "app/src/main/java/com/gamehost",
+    ).map(::File).firstOrNull { it.isDirectory }
+}

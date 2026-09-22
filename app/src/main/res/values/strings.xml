@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This is the BASE resource set and it is French (DESIGN_REQUIREMENTS.md §21).
+
+    French is deliberately not in values-fr/: as the base set it is also the fallback,
+    so Gamehost is French on a device set to any language. Adding another language
+    later means adding res/values-xx/strings.xml and changing no code.
+
+    No user-facing string literal may appear in Kotlin source.
+-->
+<resources>
+
+    <string name="app_name" translatable="false">Gamehost</string>
+
+    <!-- Campaign folder -->
+    <string name="browser_choose_folder">Choisir le dossier de campagne</string>
+    <string name="browser_change_folder">Changer de dossier</string>
+    <string name="browser_no_folder_title">Aucune campagne ouverte</string>
+    <string name="browser_no_folder_body">Choisissez le dossier qui contient les images de votre campagne. Gamehost lit vos fichiers sans les copier ni les modifier.</string>
+    <string name="browser_root">Campagne</string>
+    <string name="browser_empty">Ce dossier ne contient aucune image</string>
+    <string name="browser_folder_unavailable">Dossier indisponible. Choisissez-en un autre.</string>
+    <string name="browser_refresh">Actualiser</string>
+
+    <!-- Image menu -->
+    <string name="action_show">Afficher</string>
+    <string name="action_assign_slot">Emplacement %1$d</string>
+    <string name="action_clear_slot">Vider l\'emplacement</string>
+    <string name="action_close">Fermer</string>
+
+    <!-- Player preview -->
+    <string name="preview_no_display">Aucun écran joueur</string>
+    <string name="preview_display">%1$s · %2$d × %3$d</string>
+
+    <!-- Control bar -->
+    <string name="control_black">NOIR</string>
+    <string name="control_unblack">AFFICHER</string>
+    <string name="slot_empty">Emplacement %1$d, vide</string>
+    <string name="slot_filled">Emplacement %1$d : %2$s</string>
+    <string name="slot_missing">Fichier introuvable</string>
+
+    <!-- Errors -->
+    <string name="error_slots_save">Impossible d\'enregistrer les emplacements</string>
+
+</resources>
