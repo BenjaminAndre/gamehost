@@ -28,12 +28,69 @@ and the campaign folder is still a perfectly ordinary folder.
 
 The interface is French. See `DESIGN_REQUIREMENTS.md` §21.
 
+## Transitions
+
+Changing what the players see cross-dissolves rather than cutting. The default is a
+**watercolor dissolve**: an animated threshold sweeps across a soft noise field, so the
+incoming image bleeds in through an irregular front rather than fading uniformly.
+
+It applies to *every* change of the player surface — image to image, image to the info
+panel, image to black — because the transition belongs to the surface, not to images.
+Blanking is the one exception to feeling the full duration: `NOIR` is clamped to 120 ms,
+since nothing is readable in seven frames and the panic button has to stay a panic button.
+
+The available transitions are `cut`, `fade` and `watercolor`. There is no transition editor
+and there won't be one: a campaign picks one by name, and a new one is added to the app when
+a real campaign needs it.
+
+## Campaign file
+
+Gamehost reads one optional file at the campaign root: **`Campagne.md`**. Everything it
+cares about lives in YAML frontmatter under a `gamehost:` key, so the file stays a perfectly
+ordinary Markdown note that Obsidian renders with properties, and the body is yours.
+
+```markdown
+---
+gamehost:
+  transition: watercolor
+  info:
+    background: Fonds/parchemin.jpg
+    show_lunar_state: true
+    entries:
+      - title: Le Renard de Jade
+      - location: Auberge du Héron Noir
+      - date: 1127-03-12
+      - Saison: Printemps
+---
+
+# Notes de campagne
+
+Tout ce qui suit l'en-tête est à toi. Gamehost ne le lit pas.
+```
+
+- **`transition`** — `cut`, `fade` or `watercolor`. An unrecognised name falls back to `cut`,
+  deliberately: a typo should be visible rather than silently pretty. No file at all means
+  `watercolor`.
+- **`info`** — what the INFO button shows full-screen. Entries appear in the order you write
+  them. Most are plain label/value rows, but a few names are understood: `title` becomes the
+  panel heading, `location` a headline, and `date` is written as an ISO date (`1127-03-12`)
+  and rendered in French with its weekday. With `show_lunar_state: true` the moon is drawn in
+  its phase for that date.
+- **`background`** — an image behind the info panel, relative to the campaign root. Black if
+  omitted.
+
+> **Not read yet.** Transitions currently use the watercolor default and the INFO button stays
+> disabled. The reader for this file is the next change; the format above is what it will
+> expect.
+
 ## Your files stay yours
 
-Campaign content is read where it lies and never copied, moved or modified. The single
-exception is `.gamehost/slots.json` in the campaign root, which holds the six slots as
-paths relative to that root — readable, Git-diffable, and portable to another device.
-Commit it or ignore it; Gamehost does not care.
+Campaign content is read where it lies and never copied, moved or modified. `Campagne.md` is
+yours — Gamehost reads it and never writes to it.
+
+The single file Gamehost creates is `.gamehost/slots.json` in the campaign root, which holds
+the six slots as paths relative to that root — readable, Git-diffable, and portable to
+another device. Commit it or ignore it; Gamehost does not care.
 
 ## Building
 

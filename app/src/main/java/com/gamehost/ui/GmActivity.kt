@@ -51,6 +51,8 @@ class GmActivity : ComponentActivity() {
                 val presentation by graph.presentation.state.collectAsStateWithLifecycle()
                 val bank by graph.slots.state.collectAsStateWithLifecycle()
                 val displayStatus by graph.playerDisplay.status.collectAsStateWithLifecycle()
+                // Same instance the player window collects — see PlayerImageModel.
+                val imageModel by graph.imageModel.collectAsStateWithLifecycle()
                 val campaign by graph.campaign.collectAsStateWithLifecycle()
                 val slotWriteFailed by graph.slotWriteFailed.collectAsStateWithLifecycle()
 
@@ -65,6 +67,7 @@ class GmActivity : ComponentActivity() {
                         presentation = presentation,
                         bank = bank,
                         displayStatus = displayStatus,
+                        imageModel = imageModel,
                         campaign = campaign,
                         slotWriteFailed = slotWriteFailed,
                         onChooseFolder = { pickCampaignFolder.launch(null) },
@@ -78,6 +81,7 @@ class GmActivity : ComponentActivity() {
                         onRecall = graph::recall,
                         onClearSlot = graph::clearSlot,
                         onToggleBlackout = graph::toggleBlackout,
+                        onToggleInfo = graph::toggleInfo,
                         modifier = Modifier
                             .fillMaxSize()
                             .safeDrawingPadding(),

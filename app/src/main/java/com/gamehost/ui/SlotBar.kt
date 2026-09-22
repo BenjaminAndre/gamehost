@@ -30,12 +30,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.gamehost.R
+import com.gamehost.presentation.ActiveControl
 import com.gamehost.presentation.Slot
 import com.gamehost.presentation.SlotBankState
 import com.gamehost.presentation.SlotContent
 import com.gamehost.presentation.SlotId
 
 private val BAR_HEIGHT = 84.dp
+private val MODE_BUTTON_WIDTH = 88.dp
 
 /**
  * The control bar: the permanent blank control plus the six recall slots (§6.1).
@@ -49,18 +51,23 @@ private val BAR_HEIGHT = 84.dp
 @Composable
 fun SlotBar(
     bank: SlotBankState,
-    blackout: Boolean,
-    liveSlot: SlotId?,
+    active: ActiveControl,
+    infoAvailable: Boolean,
     onRecall: (SlotId) -> Unit,
     onClear: (SlotId) -> Unit,
     onToggleBlackout: () -> Unit,
+    onToggleInfo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val blackout = active is ActiveControl.Blackout
+
     Row(
         modifier = modifier.height(BAR_HEIGHT),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // The two mode buttons sit together, visually separate from the six recall slots:
+        // two controls that change what KIND of thing is shown, six that choose which image.
         Button(
             onClick = onToggleBlackout,
             shape = RoundedCornerShape(6.dp),
@@ -76,7 +83,7 @@ fun SlotBar(
                 )
             },
             modifier = Modifier
-                .width(104.dp)
+                .width(MODE_BUTTON_WIDTH)
                 .fillMaxHeight(),
         ) {
             Text(
@@ -86,10 +93,35 @@ fun SlotBar(
             )
         }
 
+        Button(
+            onClick = onToggleInfo,
+            // Disabled, not hidden, when the campaign has no info to show: a control that
+            // vanishes reads as a bug, one that is greyed out reads as "nothing to show".
+            enabled = infoAvailable,
+            shape = RoundedCornerShape(6.dp),
+            colors = if (active is ActiveControl.Info) {
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                )
+            } else {
+                ButtonDefaults.filledTonalButtonColors()
+            },
+            modifier = Modifier
+                .width(MODE_BUTTON_WIDTH)
+                .fillMaxHeight(),
+        ) {
+            Text(
+                text = stringResource(R.string.control_info),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
+        }
+
         bank.slots.forEach { slot ->
             SlotCell(
                 slot = slot,
-                isLive = !blackout && liveSlot?.index == slot.id.index,
+                isLive = active is ActiveControl.Slot && active.id.index == slot.id.index,
                 onRecall = { onRecall(slot.id) },
                 onClear = { onClear(slot.id) },
                 modifier = Modifier

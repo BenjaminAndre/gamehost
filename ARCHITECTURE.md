@@ -63,6 +63,45 @@ PresentationState (AppGraph, process-scoped)
 `PresentationSurface` carries its invariants in its KDoc; they are what make the
 identical-output claim a property rather than a convention.
 
+### What the renderers actually draw
+
+`PresentationState.frame()` projects state to a `Frame` — `Black`, `Picture` or `Info` —
+and that projection is the *only* thing renderers consult. It replaced `effectiveVisual()`,
+which returned a `VisualPresentation` and therefore could not express "black" distinctly
+from "no image": a transition written against it cannot tell blanking apart from an empty
+scene, and `NOIR` silently stops overriding anything. `frame()`'s first branch is
+`blackout`, before any mode dispatch, and that branch is covered by a test.
+
+### Transitions
+
+A transition is a function of two frames and time. `ActiveTransition` lives in the state and
+carries `startNanos`, stamped once in the store; each window then computes progress as a
+pure function of it while sampling its own frame clock. They are synchronised by
+construction, with no shared animation object and no state ticking at 60 Hz — and a window
+that attaches *mid*-transition, which HDMI hotplug does routinely, picks up the right
+progress immediately.
+
+Two rules that are not obvious and that a plausible implementation gets wrong:
+
+- **Progress is passed as a lambda**, read only inside `graphicsLayer`/`drawWithContent`
+  blocks. Read in composition instead, it recomposes both windows' render subtrees sixty
+  times a second and re-invokes `AsyncImage` with a fresh modifier each frame.
+- **Every layer paints its own bounds opaque black first.** Otherwise a dissolve between
+  images of differing aspect leaves the incoming layer transparent in its letterbox bars,
+  the outgoing image shows through them for the whole wash, and they snap to black the
+  instant it ends — a visible pop at the end of every transition.
+
+### One decode, two windows
+
+Coil keys its memory cache by request size, and `AsyncImage` sizes its request to the
+composable. Left alone, the preview and the player window build different requests, hold
+different cache entries, and become ready at different moments — so a dissolve genuinely
+shows different pixels in the two windows for its first frames. `PlayerImageModel` pins one
+explicit size, built once in `AppGraph` and handed to both call sites through the `model`
+parameter `PresentationSurface` already accepted. Grid and slot-bar thumbnails keep their
+own small requests: they are GM-only, so §5 does not apply, and pinning them to the display
+resolution would decode a battle map at full size for a 132 dp cell.
+
 | State | Owner | Lifetime |
 |---|---|---|
 | `PresentationStore`, `SlotBank`, `ContentRepository`, `PlayerDisplayHost` | `AppGraph` | process |

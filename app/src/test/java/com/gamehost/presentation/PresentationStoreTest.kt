@@ -49,10 +49,10 @@ class PresentationStoreTest {
 
         store.setBlackout(true)
         assertEquals(VisualSource.Image(jadeFox), store.state.value.scene.visual.source)
-        assertEquals(VisualSource.None, store.state.value.effectiveVisual().source)
+        assertEquals(Frame.Black, store.state.value.frame())
 
         store.setBlackout(false)
-        assertEquals(VisualSource.Image(jadeFox), store.state.value.effectiveVisual().source)
+        assertEquals(Frame.Picture(jadeFox, ScalingMode.Fit), store.state.value.frame())
     }
 
     @Test
@@ -111,13 +111,52 @@ class PresentationStoreTest {
     }
 
     @Test
-    fun `effectiveVisual keeps the scaling mode while blanked`() {
+    fun `blanking projects to black without discarding the scene`() {
         val state = PresentationState(
-            scene = Scene(VisualPresentation(VisualSource.Image(jadeFox), ScalingMode.Fill)),
+            scene = Scene(visual = VisualPresentation(VisualSource.Image(jadeFox), ScalingMode.Fill)),
             blackout = true,
         )
 
-        assertEquals(VisualSource.None, state.effectiveVisual().source)
-        assertEquals(ScalingMode.Fill, state.effectiveVisual().scaling)
+        assertEquals(Frame.Black, state.frame())
+        // The scene is intact underneath, which is what makes un-blanking free.
+        assertEquals(VisualSource.Image(jadeFox), state.scene.visual.source)
+        assertEquals(ScalingMode.Fill, state.scene.visual.scaling)
+    }
+
+    // ---- frame() projection ------------------------------------------------------
+
+    @Test
+    fun `an empty scene projects to black`() {
+        assertEquals(Frame.Black, PresentationState().frame())
+    }
+
+    @Test
+    fun `info mode projects to the panel`() {
+        val panel = InfoPanel(title = "Renard de Jade")
+        val state = PresentationState(scene = Scene(mode = SceneMode.Info, info = panel))
+
+        assertEquals(Frame.Info(panel, null), state.frame())
+    }
+
+    /**
+     * The panic button. NOIR overrides INFO as well as the image — the single most
+     * important branch in the projection, and the one a Scene-shaped transition model
+     * silently got wrong.
+     */
+    @Test
+    fun `blackout overrides info mode`() {
+        val state = PresentationState(
+            scene = Scene(mode = SceneMode.Info, info = InfoPanel(title = "Renard de Jade")),
+            blackout = true,
+        )
+
+        assertEquals(Frame.Black, state.frame())
+    }
+
+    @Test
+    fun `info mode with no panel projects to black rather than throwing`() {
+        val state = PresentationState(scene = Scene(mode = SceneMode.Info, info = null))
+
+        assertEquals(Frame.Black, state.frame())
     }
 }

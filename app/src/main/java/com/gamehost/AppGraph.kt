@@ -9,13 +9,18 @@ import com.gamehost.content.RootStore
 import com.gamehost.content.saf.DocumentTreeSource
 import com.gamehost.content.saf.SafSlotStore
 import com.gamehost.display.PlayerDisplayHost
+import com.gamehost.display.PlayerDisplayStatus
 import com.gamehost.display.PresentationPlayerDisplayHost
+import com.gamehost.render.PlayerImageModel
+import com.gamehost.render.playerImageModel
 import com.gamehost.presentation.PresentationStore
+import com.gamehost.presentation.SceneMode
 import com.gamehost.presentation.SlotBank
 import com.gamehost.presentation.SlotBankState
 import com.gamehost.presentation.SlotContent
 import com.gamehost.presentation.SlotId
 import com.gamehost.presentation.SnapshotStore
+import com.gamehost.presentation.TransitionSpec
 import com.gamehost.presentation.toSnapshot
 import com.gamehost.presentation.toState
 import com.gamehost.storage.PrefsRootStore
@@ -42,6 +47,15 @@ import kotlinx.coroutines.withContext
 enum class CampaignState { Restoring, None, Open }
 
 /**
+ * Decode size used while no player display is attached.
+ *
+ * Matches [PlayerDisplayStatus.DEFAULT_PLAYER_ASPECT], so the preview's letterboxing looks
+ * the same before and after the cable goes in.
+ */
+private const val FALLBACK_PLAYER_WIDTH_PX = 1920
+private const val FALLBACK_PLAYER_HEIGHT_PX = 1080
+
+/**
  * Hand-rolled dependency graph, scoped to the process.
  *
  * Roughly thirty lines instead of Hilt or Koin, for four singletons.
@@ -60,7 +74,17 @@ class AppGraph(private val app: Application) {
 
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    val presentation = PresentationStore()
+    /**
+     * The campaign's configured transition.
+     *
+     * Read through a lambda by the store rather than passed by value, so opening a
+     * different campaign folder changes it without rebuilding presentation state. The
+     * `transition:` key in `Campagne.md` sets it; until that reader exists it holds the
+     * default from [TransitionSpec.byName] for an absent config.
+     */
+    private val _transitionSpec = MutableStateFlow(TransitionSpec.byName(null))
+
+    val presentation = PresentationStore(spec = { _transitionSpec.value })
     val slots = SlotBank()
 
     private val rootStore: RootStore = PrefsRootStore(app)
@@ -78,9 +102,37 @@ class AppGraph(private val app: Application) {
 
     private var slotStore: SafSlotStore? = null
 
-    val playerDisplay: PlayerDisplayHost = PresentationPlayerDisplayHost(app, presentation.state)
+    /**
+     * The one image request builder both render targets use.
+     *
+     * Declared before [playerDisplay] and updated from its status in [init], rather than
+     * derived from it with `map`/`stateIn` — the display host needs this flow at
+     * construction and this flow needs the display's size, so one of the two has to start
+     * with a stand-in. Doing it this way keeps the cycle broken without a lazy indirection.
+     */
+    private val _imageModel = MutableStateFlow(
+        playerImageModel(app, FALLBACK_PLAYER_WIDTH_PX, FALLBACK_PLAYER_HEIGHT_PX),
+    )
+    val imageModel: StateFlow<PlayerImageModel> = _imageModel.asStateFlow()
+
+    val playerDisplay: PlayerDisplayHost =
+        PresentationPlayerDisplayHost(app, presentation.state, imageModel)
 
     init {
+        // Re-pin the decode size whenever the player display changes, so both windows keep
+        // sharing one Coil cache entry at the display's actual resolution.
+        playerDisplay.status
+            .onEach { status ->
+                _imageModel.value = when (status) {
+                    is PlayerDisplayStatus.Attached ->
+                        playerImageModel(app, status.widthPx, status.heightPx)
+
+                    PlayerDisplayStatus.Absent ->
+                        playerImageModel(app, FALLBACK_PLAYER_WIDTH_PX, FALLBACK_PLAYER_HEIGHT_PX)
+                }
+            }
+            .launchIn(appScope)
+
         appScope.launch {
             val saved = restoreRoot()
             if (saved != null) openRoot(saved) else _campaign.value = CampaignState.None
@@ -169,6 +221,10 @@ class AppGraph(private val app: Application) {
     }
 
     fun toggleBlackout() = presentation.toggleBlackout()
+
+    fun toggleInfo() {
+        presentation.setInfoMode(presentation.state.value.scene.mode != SceneMode.Info)
+    }
 
     // ---- Slot actions -----------------------------------------------------------
 

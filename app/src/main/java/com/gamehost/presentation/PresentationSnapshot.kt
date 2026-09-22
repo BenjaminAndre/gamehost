@@ -41,9 +41,16 @@ fun PresentationState.toSnapshot(): PresentationSnapshot = PresentationSnapshot(
  */
 fun PresentationSnapshot.toState(forceBlackout: Boolean): PresentationState {
     val source = imageId?.let { VisualSource.Image(ContentId(it)) } ?: VisualSource.None
-    val mode = ScalingMode.entries.firstOrNull { it.name == scaling } ?: ScalingMode.Fit
+    val scalingMode = ScalingMode.entries.firstOrNull { it.name == scaling } ?: ScalingMode.Fit
     return PresentationState(
-        scene = Scene(visual = VisualPresentation(source = source, scaling = mode)),
+        scene = Scene(
+            // Explicit, not merely the default. The info panel is derived from Campagne.md
+            // and is NOT persisted — so restoring `mode = Info` would restore it with
+            // `info = null`, which frame() projects to black. The app would come up black
+            // and stay black until the GM tapped something: indistinguishable from a bug.
+            mode = SceneMode.Visual,
+            visual = VisualPresentation(source = source, scaling = scalingMode),
+        ),
         blackout = forceBlackout || blackout,
         liveSlot = liveSlot?.let(::SlotId),
     )

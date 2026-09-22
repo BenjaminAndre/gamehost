@@ -26,8 +26,17 @@ class ArchitectureTest {
 
     private val rules = listOf(
         // Pure domain. content/saf is the single Android-touching leaf.
-        Rule("content", listOf("android.", "androidx.", "coil3.", "com.gamehost.ui"), listOf("content/saf")),
-        Rule("presentation", listOf("android.", "androidx.", "coil3.", "com.gamehost.ui")),
+        //
+        // org.yaml is forbidden here even though it is not `android.*`: the campaign file
+        // parser belongs in content/saf (it needs the ContentResolver anyway) and must hand
+        // these packages a plain data class. Without this rule snakeyaml would pass the
+        // test while violating its whole point.
+        Rule(
+            "content",
+            listOf("android.", "androidx.", "coil3.", "org.yaml", "com.gamehost.ui"),
+            listOf("content/saf"),
+        ),
+        Rule("presentation", listOf("android.", "androidx.", "coil3.", "org.yaml", "com.gamehost.ui")),
 
         // The shared renderer must not know which window it is in, nor reach for UI.
         Rule("render", listOf("com.gamehost.ui", "com.gamehost.display")),

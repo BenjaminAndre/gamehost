@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.gamehost.R
 import com.gamehost.display.PlayerDisplayStatus
 import com.gamehost.presentation.PresentationState
+import com.gamehost.render.PlayerImageModel
 import com.gamehost.render.PresentationSurface
 
 /**
@@ -51,6 +52,7 @@ import com.gamehost.render.PresentationSurface
 fun PlayerPreviewPane(
     state: PresentationState,
     status: PlayerDisplayStatus,
+    model: PlayerImageModel,
     modifier: Modifier = Modifier,
 ) {
     val aspect = when (status) {
@@ -75,6 +77,7 @@ fun PlayerPreviewPane(
             PresentationSurface(
                 state = state,
                 modifier = Modifier.matchParentSize(),
+                model = model,
             )
 
             if (status is PlayerDisplayStatus.Absent) {

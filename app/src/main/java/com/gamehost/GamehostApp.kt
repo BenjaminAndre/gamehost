@@ -2,6 +2,9 @@ package com.gamehost
 
 import android.app.Application
 import android.content.Context
+import com.gamehost.render.DissolveMask
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Note what is *not* configured here: a custom Coil `ImageLoader`.
@@ -24,6 +27,12 @@ class GamehostApp : Application() {
     override fun onCreate() {
         super.onCreate()
         graph = AppGraph(this)
+
+        // Generate the watercolor noise field off the main thread, once, before the first
+        // transition asks for it. It is an immutable process-wide value, so warming it
+        // early cannot make the two windows disagree — it only avoids a hitch on the GM's
+        // first slot tap.
+        graph.appScope.launch(Dispatchers.Default) { DissolveMask.warm() }
     }
 }
 

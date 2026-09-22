@@ -38,6 +38,7 @@
     <!-- Control bar -->
     <string name="control_black">NOIR</string>
     <string name="control_unblack">AFFICHER</string>
+    <string name="control_info">INFO</string>
     <string name="slot_empty">Emplacement %1$d, vide</string>
     <string name="slot_filled">Emplacement %1$d : %2$s</string>
     <string name="slot_missing">Fichier introuvable</string>

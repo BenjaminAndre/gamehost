@@ -14,7 +14,7 @@ class PresentationSnapshotTest {
     @Test
     fun `a full state round-trips`() {
         val original = PresentationState(
-            scene = Scene(VisualPresentation(VisualSource.Image(jadeFox), ScalingMode.Fill)),
+            scene = Scene(visual = VisualPresentation(VisualSource.Image(jadeFox), ScalingMode.Fill)),
             blackout = false,
             liveSlot = SlotId(4),
         )
@@ -42,7 +42,7 @@ class PresentationSnapshotTest {
     @Test
     fun `forceBlackout blanks a restored scene without losing it`() {
         val snapshot = PresentationState(
-            scene = Scene(VisualPresentation(VisualSource.Image(jadeFox))),
+            scene = Scene(visual = VisualPresentation(VisualSource.Image(jadeFox))),
             blackout = false,
         ).toSnapshot()
 
@@ -50,7 +50,21 @@ class PresentationSnapshotTest {
 
         assertTrue(restored.blackout)
         assertEquals(VisualSource.Image(jadeFox), restored.scene.visual.source)
-        assertEquals(VisualSource.None, restored.effectiveVisual().source)
+        assertEquals(Frame.Black, restored.frame())
+    }
+
+    /**
+     * The info panel is derived from Campagne.md and never persisted, so restoring
+     * `mode = Info` would restore it with `info = null` — which projects to black. The app
+     * would come up black and stay black, indistinguishable from a bug.
+     */
+    @Test
+    fun `restore always comes back in Visual mode`() {
+        val snapshot = PresentationState(
+            scene = Scene(mode = SceneMode.Info, info = InfoPanel(title = "Renard de Jade")),
+        ).toSnapshot()
+
+        assertEquals(SceneMode.Visual, snapshot.toState(forceBlackout = false).scene.mode)
     }
 
     @Test

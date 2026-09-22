@@ -33,15 +33,27 @@ data class VisualPresentation(
     val scaling: ScalingMode = ScalingMode.Fit,
 )
 
+/** Which composed component is on the surface. INFO replaces the image; it does not overlay it. */
+enum class SceneMode { Visual, Info }
+
 /**
  * What the session is currently about.
  *
  * Composition, not subclassing (§16 Trap 7). Audio becomes `val audio: AudioPresentation?`
  * here and sound effects `val overlay: OverlayPresentation?`, with no
  * `ImageWithMusicPresentation` in sight.
+ *
+ * [mode] selects which component is on the surface while the others stay composed and
+ * intact — deliberately the same shape as [PresentationState.blackout]. That buys
+ * "INFO then back returns to the same image" for free, exactly as "blank then un-blank"
+ * already does, and means audio can later arrive as a sibling field that INFO does not
+ * switch off.
  */
 data class Scene(
+    val mode: SceneMode = SceneMode.Visual,
     val visual: VisualPresentation = VisualPresentation(),
+    val info: InfoPanel? = null,
+    val infoBackground: ContentId? = null,
 )
 
 /**
@@ -66,15 +78,24 @@ data class PresentationState(
     /** Which slot is live, or null when shown ad hoc via *Afficher*. */
     val liveSlot: SlotId? = null,
 
-    /** Monotonic. Not used in v0.1; transitions will key off it rather than off wall time. */
+    /**
+     * Monotonic, one increment per change of intent by the GM.
+     *
+     * Not incremented when a transition finishes — completion is not a new intent.
+     */
     val revision: Long = 0L,
+
+    /**
+     * The cross-dissolve currently running, or null when the surface is settled.
+     *
+     * Null in the settled case is load-bearing: with no transition the renderer composes
+     * exactly one layer and ticks no frame clock, so a campaign configured for `cut` gets
+     * v0.1's render path unchanged rather than a dormant animation harness.
+     */
+    val transition: ActiveTransition? = null,
 )
 
-/**
- * The only function the renderers call.
- *
- * Pure, so the "one state, two renderers" guarantee is a property that can be
- * unit-tested rather than a convention that has to be remembered.
- */
-fun PresentationState.effectiveVisual(): VisualPresentation =
-    if (blackout) scene.visual.copy(source = VisualSource.None) else scene.visual
+// The projection the renderers use lives in Frame.kt as `PresentationState.frame()`.
+// The old `effectiveVisual()` was deleted with v0.2: it returned a VisualPresentation,
+// which cannot express "black" distinctly from "no image", so once INFO existed a
+// transition written against it could not tell blanking apart from an empty scene.

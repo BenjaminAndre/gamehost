@@ -24,6 +24,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.gamehost.presentation.PresentationState
+import com.gamehost.render.PlayerImageModel
 import com.gamehost.render.PresentationSurface
 import kotlinx.coroutines.flow.StateFlow
 
@@ -55,6 +56,7 @@ class PlayerPresentation(
     outerContext: Context,
     display: Display,
     private val state: StateFlow<PresentationState>,
+    private val imageModel: StateFlow<PlayerImageModel>,
 ) : Presentation(outerContext, display), LifecycleOwner, SavedStateRegistryOwner {
 
     private val lifecycleRegistry = LifecycleRegistry(this)
@@ -94,7 +96,10 @@ class PlayerPresentation(
                 setViewTreeSavedStateRegistryOwner(this@PlayerPresentation)
                 setContent {
                     val current by state.collectAsStateWithLifecycle()
-                    PresentationSurface(current, Modifier.fillMaxSize())
+                    // The SAME model instance the GM preview uses, so both windows resolve
+                    // to one Coil cache entry and one decode.
+                    val model by imageModel.collectAsStateWithLifecycle()
+                    PresentationSurface(current, Modifier.fillMaxSize(), model)
                 }
             },
         )

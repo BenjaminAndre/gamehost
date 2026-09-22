@@ -32,6 +32,8 @@ import com.gamehost.display.PlayerDisplayStatus
 import com.gamehost.presentation.PresentationState
 import com.gamehost.presentation.SlotBankState
 import com.gamehost.presentation.SlotId
+import com.gamehost.presentation.activeControl
+import com.gamehost.render.PlayerImageModel
 
 /**
  * Most of the stacked layout's height belongs to the browser; the preview gets at most
@@ -45,6 +47,7 @@ fun GmScreen(
     presentation: PresentationState,
     bank: SlotBankState,
     displayStatus: PlayerDisplayStatus,
+    imageModel: PlayerImageModel,
     campaign: CampaignState,
     slotWriteFailed: Boolean,
     onChooseFolder: () -> Unit,
@@ -56,6 +59,7 @@ fun GmScreen(
     onRecall: (SlotId) -> Unit,
     onClearSlot: (SlotId) -> Unit,
     onToggleBlackout: () -> Unit,
+    onToggleInfo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (campaign) {
@@ -138,6 +142,7 @@ fun GmScreen(
                     PlayerPreviewPane(
                         state = presentation,
                         status = displayStatus,
+                        model = imageModel,
                         modifier = Modifier
                             .weight(0.38f)
                             .padding(top = 8.dp),
@@ -157,6 +162,7 @@ fun GmScreen(
                     PlayerPreviewPane(
                         state = presentation,
                         status = displayStatus,
+                        model = imageModel,
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = previewMaxHeight),
@@ -167,11 +173,12 @@ fun GmScreen(
 
         SlotBar(
             bank = bank,
-            blackout = presentation.blackout,
-            liveSlot = presentation.liveSlot,
+            active = presentation.activeControl(),
+            infoAvailable = presentation.scene.info != null,
             onRecall = onRecall,
             onClear = onClearSlot,
             onToggleBlackout = onToggleBlackout,
+            onToggleInfo = onToggleInfo,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),

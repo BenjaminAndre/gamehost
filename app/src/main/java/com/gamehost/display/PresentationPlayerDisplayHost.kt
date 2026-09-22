@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.gamehost.presentation.PresentationState
+import com.gamehost.render.PlayerImageModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class PresentationPlayerDisplayHost(
     private val appContext: Context,
     private val state: StateFlow<PresentationState>,
+    private val imageModel: StateFlow<PlayerImageModel>,
 ) : PlayerDisplayHost {
 
     private val _status = MutableStateFlow<PlayerDisplayStatus>(PlayerDisplayStatus.Absent)
@@ -107,7 +109,7 @@ class PresentationPlayerDisplayHost(
                 return
             }
 
-            val created = PlayerPresentation(activity, display, state)
+            val created = PlayerPresentation(activity, display, state, imageModel)
             created.setOnDismissListener {
                 // Presentation auto-dismisses when its display is removed; keep our
                 // own references honest when that happens behind our back.
