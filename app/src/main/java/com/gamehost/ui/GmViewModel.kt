@@ -109,7 +109,16 @@ class GmViewModel(
     private suspend fun restoreLocation(repository: ContentRepository) {
         // The location is saved as folder *names*, not ids: names survive a process
         // death and a reinstall, which document ids under a fresh grant may not.
-        val savedSegments = savedState.get<ArrayList<String>>(KEY_LOCATION).orEmpty()
+        //
+        // It is keyed by root, though, precisely because names are not unique across
+        // campaigns. Without that check, switching from a campaign where you were in
+        // Cartes/Donjon to one that also has those folders would drop you three levels
+        // deep in the new campaign instead of at its root.
+        val savedSegments = if (savedState.get<String>(KEY_LOCATION_ROOT) == repository.rootId.value) {
+            savedState.get<ArrayList<String>>(KEY_LOCATION).orEmpty()
+        } else {
+            emptyList()
+        }
 
         var stack = listOf(FolderCrumb(repository.rootId, null))
         var folder = repository.rootId
@@ -141,12 +150,14 @@ class GmViewModel(
                 )
             }
             savedState[KEY_LOCATION] = ArrayList(_browsing.value.folderNames)
+            savedState[KEY_LOCATION_ROOT] = repository.rootId.value
         }
     }
 
     companion object {
 
         private const val KEY_LOCATION = "browsing_location"
+        private const val KEY_LOCATION_ROOT = "browsing_location_root"
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

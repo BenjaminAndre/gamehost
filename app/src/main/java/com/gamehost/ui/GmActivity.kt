@@ -51,7 +51,7 @@ class GmActivity : ComponentActivity() {
                 val presentation by graph.presentation.state.collectAsStateWithLifecycle()
                 val bank by graph.slots.state.collectAsStateWithLifecycle()
                 val displayStatus by graph.playerDisplay.status.collectAsStateWithLifecycle()
-                val repository by graph.repository.collectAsStateWithLifecycle()
+                val campaign by graph.campaign.collectAsStateWithLifecycle()
                 val slotWriteFailed by graph.slotWriteFailed.collectAsStateWithLifecycle()
 
                 BackHandler(enabled = browsing.canGoUp) { gmViewModel.up() }
@@ -65,7 +65,7 @@ class GmActivity : ComponentActivity() {
                         presentation = presentation,
                         bank = bank,
                         displayStatus = displayStatus,
-                        hasRoot = repository != null,
+                        campaign = campaign,
                         slotWriteFailed = slotWriteFailed,
                         onChooseFolder = { pickCampaignFolder.launch(null) },
                         onJumpTo = gmViewModel::jumpTo,

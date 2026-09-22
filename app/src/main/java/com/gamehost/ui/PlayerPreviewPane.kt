@@ -57,7 +57,13 @@ fun PlayerPreviewPane(
         PlayerDisplayStatus.Absent -> PlayerDisplayStatus.DEFAULT_PLAYER_ASPECT
     }
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // Centred because the box below is not always full width: when the caller bounds the
+    // height, aspectRatio satisfies that constraint instead and returns a narrower box.
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()

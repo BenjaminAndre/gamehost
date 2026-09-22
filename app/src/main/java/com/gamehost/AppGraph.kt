@@ -32,6 +32,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
+ * Whether a campaign is open — with [Restoring] distinct from [None].
+ *
+ * Restoring the saved root suspends on a disk read, so the first composition always runs
+ * before it finishes. Collapsing these two into a single boolean made every launch flash
+ * the full "no campaign" screen, complete with a live folder-picker button, before the
+ * browser appeared.
+ */
+enum class CampaignState { Restoring, None, Open }
+
+/**
  * Hand-rolled dependency graph, scoped to the process.
  *
  * Roughly thirty lines instead of Hilt or Koin, for four singletons.
@@ -59,6 +69,9 @@ class AppGraph(private val app: Application) {
     private val _repository = MutableStateFlow<ContentRepository?>(null)
     val repository: StateFlow<ContentRepository?> = _repository.asStateFlow()
 
+    private val _campaign = MutableStateFlow(CampaignState.Restoring)
+    val campaign: StateFlow<CampaignState> = _campaign.asStateFlow()
+
     /** True when the slot bank could not be written back to `.gamehost/slots.json`. */
     private val _slotWriteFailed = MutableStateFlow(false)
     val slotWriteFailed: StateFlow<Boolean> = _slotWriteFailed.asStateFlow()
@@ -69,7 +82,8 @@ class AppGraph(private val app: Application) {
 
     init {
         appScope.launch {
-            restoreRoot()?.let { openRoot(it) }
+            val saved = restoreRoot()
+            if (saved != null) openRoot(saved) else _campaign.value = CampaignState.None
 
             val snapshot = withContext(Dispatchers.IO) { snapshotStore.load() }
             if (snapshot != null) {
@@ -105,6 +119,7 @@ class AppGraph(private val app: Application) {
 
         slotStore = store
         _repository.value = repository
+        _campaign.value = CampaignState.Open
         _slotWriteFailed.value = false
 
         // The bank is loaded as paths and only then resolved against the tree, so a

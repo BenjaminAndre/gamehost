@@ -1,12 +1,14 @@
 package com.gamehost.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.gamehost.CampaignState
 import com.gamehost.R
 import com.gamehost.content.ContentItem
 import com.gamehost.display.PlayerDisplayStatus
@@ -30,13 +33,19 @@ import com.gamehost.presentation.PresentationState
 import com.gamehost.presentation.SlotBankState
 import com.gamehost.presentation.SlotId
 
+/**
+ * Most of the stacked layout's height belongs to the browser; the preview gets at most
+ * this share of it, whatever ratio the player display reports.
+ */
+private const val PREVIEW_MAX_HEIGHT_FRACTION = 0.42f
+
 @Composable
 fun GmScreen(
     browsing: BrowsingState,
     presentation: PresentationState,
     bank: SlotBankState,
     displayStatus: PlayerDisplayStatus,
-    hasRoot: Boolean,
+    campaign: CampaignState,
     slotWriteFailed: Boolean,
     onChooseFolder: () -> Unit,
     onJumpTo: (Int) -> Unit,
@@ -49,9 +58,21 @@ fun GmScreen(
     onToggleBlackout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (!hasRoot) {
-        NoCampaignState(onChooseFolder = onChooseFolder, modifier = modifier)
-        return
+    when (campaign) {
+        // Deliberately blank, not a spinner. The saved root usually resolves within a
+        // frame or two, and a spinner that appears and vanishes that fast is more
+        // jarring than a brief empty background.
+        CampaignState.Restoring -> {
+            Box(modifier = modifier.fillMaxSize())
+            return
+        }
+
+        CampaignState.None -> {
+            NoCampaignState(onChooseFolder = onChooseFolder, modifier = modifier)
+            return
+        }
+
+        CampaignState.Open -> Unit
     }
 
     var pendingItem by remember { mutableStateOf<ContentItem?>(null) }
@@ -125,7 +146,14 @@ fun GmScreen(
                     PlayerPreviewPane(
                         state = presentation,
                         status = displayStatus,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // Hard cap. In a Column the UNWEIGHTED child is measured
+                            // first and takes what it asks for, so without this the
+                            // preview's height is dictated entirely by the attached
+                            // display's aspect ratio — and a tall one silently starves
+                            // the weighted browser above it to zero height.
+                            .heightIn(max = maxHeight * PREVIEW_MAX_HEIGHT_FRACTION),
                     )
                 }
             }
