@@ -7,8 +7,11 @@ import com.gamehost.content.CampaignConfig
 import com.gamehost.content.CampaignInfoConfig
 import com.gamehost.content.CampaignInfoEntry
 import com.gamehost.content.ContentPath
-import java.time.ZoneOffset
+import java.util.Calendar
 import java.util.Date
+import java.util.GregorianCalendar
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -144,20 +147,40 @@ class CampaignFile(
             )
         }
 
-        /**
-         * Renders a YAML scalar back to the text the GM wrote.
-         *
-         * The awkward case is [Date]. YAML resolves an unquoted `1127-03-12` to a timestamp,
-         * so the value never reaches us as a string — and `Date.toString()` would hand back
-         * a locale-formatted mess with a timezone in it. Going through `Instant` at UTC
-         * returns it to a proleptic ISO date, which is the calendar the rest of the app
-         * uses. Covered by a test, because getting this wrong for a twelfth-century date
-         * would be both easy and silent.
-         */
+        /** Renders a YAML scalar back to the text the GM wrote. */
         private fun scalarToString(value: Any?): String = when (value) {
             null -> ""
-            is Date -> value.toInstant().atOffset(ZoneOffset.UTC).toLocalDate().toString()
+            is Date -> isoDate(value)
             else -> value.toString()
+        }
+
+        /**
+         * Returns a YAML timestamp to the `yyyy-MM-dd` the GM typed.
+         *
+         * YAML resolves an unquoted `1127-03-12` to a timestamp, so the value never reaches
+         * us as a string, and `Date.toString()` would hand back a locale-formatted mess with
+         * a timezone in it.
+         *
+         * The subtlety, which cost a red build: snakeyaml constructs that [Date] through
+         * [GregorianCalendar], and **`GregorianCalendar` applies the Julian calendar before
+         * the 1582 cutover.** So the instant it produces for `1127-03-12` is Julian 12 March
+         * — which proleptic ISO, the calendar `java.time` speaks, calls 19 March. Reading it
+         * back with `java.time` therefore shifted every twelfth-century date by seven days.
+         *
+         * Reading it back through the *same* hybrid calendar round-trips exactly, for dates
+         * either side of the reform. Which is all this function should ever do: the meaning
+         * of a historical date is decided once, in `HistoricalCalendar`, not here.
+         */
+        private fun isoDate(value: Date): String {
+            val calendar = GregorianCalendar(TimeZone.getTimeZone("UTC"))
+            calendar.time = value
+            return String.format(
+                Locale.ROOT,
+                "%04d-%02d-%02d",
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH) + 1,
+                calendar.get(Calendar.DAY_OF_MONTH),
+            )
         }
 
         private fun String.isFence(): Boolean = this == "---"

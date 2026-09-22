@@ -90,6 +90,29 @@ class CampaignFileTest {
         assertEquals("1127-03-12", entries.first { it.key == "date" }.value)
     }
 
+    /**
+     * The other side of the 1582 cutover, where snakeyaml's calendar is Gregorian rather
+     * than Julian. Both must round-trip, or the fix for one breaks the other.
+     */
+    @Test
+    fun `a modern unquoted date round-trips too`() {
+        val config = CampaignFile.parse(
+            "---\ngamehost:\n  info:\n    entries:\n      - date: 2026-09-22\n---\n",
+        )
+
+        assertEquals("2026-09-22", config.info?.entries?.first()?.value)
+    }
+
+    @Test
+    fun `the last Julian day and the first Gregorian one both round-trip`() {
+        listOf("1582-10-04", "1582-10-15").forEach { written ->
+            val config = CampaignFile.parse(
+                "---\ngamehost:\n  info:\n    entries:\n      - date: $written\n---\n",
+            )
+            assertEquals(written, config.info?.entries?.first()?.value)
+        }
+    }
+
     @Test
     fun `a quoted date is left exactly alone`() {
         val config = CampaignFile.parse(
