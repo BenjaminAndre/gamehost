@@ -833,11 +833,13 @@ Sorting of folder and file names in the content browser must use **locale-aware 
 
 Any date or number formatting uses locale-aware formatters.
 
-## 21.2 The player surface renders no text
+## 21.2 The player surface renders no *application* text
 
-The blank state of the player display is pure black — never a localised "no content" message.
+The **blank** state of the player display is pure black — never a localised "no content" message. The player display carries no GM-facing information (§4).
 
-This follows from §4: the player display carries no GM-facing information. It conveniently makes localisation a **GM-surface concern only**.
+**Campaign info (§22.1) is the one text the player surface renders.** It is campaign content, not application text: Gamehost never translates it (§21.3), and the only strings Gamehost generates for it are locale-formatted dates.
+
+A date produced by `java.time` and a `Locale` is **not** a string literal and needs no string resource — §21.1's rule is about text Gamehost authors, not text it formats.
 
 ## 21.3 Campaign content is not localised
 
@@ -850,3 +852,52 @@ Gamehost never translates them and never assumes what language they are in.
 Identifiers, comments, KDoc, README and commit messages are English, consistent with the Android and Kotlin APIs they sit alongside.
 
 Only string resources and on-screen text are French.
+
+---
+
+# 22. v0.2 — campaign info and transitions
+
+Two additions, both driven by actual need at the table.
+
+## 22.1 Campaign info
+
+A single **INFO** control in the bar. When enabled, the player display shows a full-screen campaign panel **instead of** the current image.
+
+It is a *mode*, composed into the scene alongside the visual — not an overlay layered on top. That is what makes "INFO, then back" return to the same image for free, exactly as blanking already does. **NOIR overrides INFO**, because the panic button overrides everything.
+
+The panel may specify its own background image; otherwise it is black.
+
+Content comes from the campaign's own files (§22.3). Entries are free-form label/value pairs in the order the GM wrote them, plus a small set of known fields that earn special treatment by either **computing** something the GM would otherwise maintain by hand, or **formatting** something a generic row would render badly:
+
+* `title` — panel heading
+* `location` — promoted headline
+* `date` — written out in full, in French, with its weekday
+* `show_lunar_state` — draws the Moon in its phase for that date
+
+This is not a general-purpose overlay editor and must not become one. A new known field is justified only by the two tests above.
+
+### Dates before 1582 are Julian
+
+`date` follows the convention of Wikipedia and historical lunar tables: **Julian before 15 October 1582, Gregorian from then on.** The GM writes the date exactly as their sources give it.
+
+In the twelfth century the calendars differ by **seven days**, so a full moon listed as 9 January 1137 falls on 16 January in the proleptic Gregorian calendar `java.time` uses. Gamehost converts internally before computing anything astronomical, and displays the date as written — so the panel agrees with the GM's notes and the Moon agrees with the sky.
+
+The phase is a mean-synodic model, accurate to about a day. That is far beyond what anyone at a table can check, and the honest alternative is a great deal of arithmetic for no visible gain.
+
+## 22.2 Transitions
+
+Changing the player surface cross-dissolves rather than cutting. The first implementation is a **watercolor dissolve**, chosen because it belongs to the visual identity of a Song-dynasty wuxia campaign.
+
+The transition applies to **every** change of the player surface — image to image, image to info, image to black — because it is a property of the surface, not of images. Blanking is clamped to a fraction of the configured duration: nothing is readable in a few frames, and NOIR must stay a panic button.
+
+The app contains a small fixed set of transitions — `cut`, `fade`, `watercolor` — and a campaign picks one **by name**. There is no transition authoring system, and an unrecognised name falls back to `cut` so that a typo is visible rather than silently pretty.
+
+A new transition is added to the app when a real campaign needs one. Not before.
+
+## 22.3 The campaign file
+
+One optional file at the campaign root, `Campagne.md`, with everything Gamehost-specific under a namespaced `gamehost:` key in YAML frontmatter (§15).
+
+It remains a perfectly ordinary Markdown note: Obsidian renders it with properties, the body belongs to the GM, and Gamehost reads it without ever writing to it. A missing or malformed file means the defaults apply and is never an error.
+
+It is re-read whenever INFO is pressed, so an edit made in Obsidian mid-session appears without Gamehost watching the filesystem.

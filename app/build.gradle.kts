@@ -62,6 +62,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coroutines.android)
+    implementation(libs.snakeyaml)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

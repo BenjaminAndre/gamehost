@@ -33,6 +33,9 @@ data class InfoPanel(
     /** Promoted above the entries — the `location` field, the thing players look for first. */
     val headline: String? = null,
 
+    /** The `date` field, already written out in French. Its own line, not a label/value row. */
+    val dateLine: String? = null,
+
     /** Generic rows, in the order the GM wrote them. */
     val entries: List<InfoEntry> = emptyList(),
 
@@ -43,5 +46,6 @@ data class InfoPanel(
     val moonPhase: Float? = null,
 ) {
     val isEmpty: Boolean
-        get() = title == null && headline == null && entries.isEmpty() && moonPhase == null
+        get() = title == null && headline == null && dateLine == null &&
+            entries.isEmpty() && moonPhase == null
 }

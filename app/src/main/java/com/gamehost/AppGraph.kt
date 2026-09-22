@@ -2,10 +2,12 @@ package com.gamehost
 
 import android.app.Application
 import android.net.Uri
+import com.gamehost.content.CampaignConfig
 import com.gamehost.content.ContentItem
 import com.gamehost.content.ContentPath
 import com.gamehost.content.ContentRepository
 import com.gamehost.content.RootStore
+import com.gamehost.content.saf.CampaignFile
 import com.gamehost.content.saf.DocumentTreeSource
 import com.gamehost.content.saf.SafSlotStore
 import com.gamehost.display.PlayerDisplayHost
@@ -13,6 +15,7 @@ import com.gamehost.display.PlayerDisplayStatus
 import com.gamehost.display.PresentationPlayerDisplayHost
 import com.gamehost.render.PlayerImageModel
 import com.gamehost.render.playerImageModel
+import com.gamehost.presentation.CampaignInfo
 import com.gamehost.presentation.PresentationStore
 import com.gamehost.presentation.SceneMode
 import com.gamehost.presentation.SlotBank
@@ -83,6 +86,12 @@ class AppGraph(private val app: Application) {
      * default from [TransitionSpec.byName] for an absent config.
      */
     private val _transitionSpec = MutableStateFlow(TransitionSpec.byName(null))
+
+    /** Last read of `Campagne.md`. Re-read when a campaign is opened. */
+    private val _campaignConfig = MutableStateFlow(CampaignConfig.EMPTY)
+    val campaignConfig: StateFlow<CampaignConfig> = _campaignConfig.asStateFlow()
+
+    private var campaignFile: CampaignFile? = null
 
     val presentation = PresentationStore(spec = { _transitionSpec.value })
     val slots = SlotBank()
@@ -174,6 +183,11 @@ class AppGraph(private val app: Application) {
         _campaign.value = CampaignState.Open
         _slotWriteFailed.value = false
 
+        // Read Campagne.md before anything can be presented, so the very first slot tap
+        // already dissolves the way the campaign asked for.
+        campaignFile = CampaignFile(app.contentResolver, treeUri)
+        reloadCampaignConfig()
+
         // The bank is loaded as paths and only then resolved against the tree, so a
         // renamed file surfaces as a *missing* slot rather than vanishing (§6.1).
         slots.replaceAll(SlotBankState.unresolved(store.load()))
@@ -223,7 +237,37 @@ class AppGraph(private val app: Application) {
     fun toggleBlackout() = presentation.toggleBlackout()
 
     fun toggleInfo() {
+        // Toggled immediately, then the file is re-read in the background. A button that
+        // waits on disk before doing anything is the wrong trade at a table; if the file did
+        // change, the panel dissolves to the new content a moment later, which is correct.
         presentation.setInfoMode(presentation.state.value.scene.mode != SceneMode.Info)
+        appScope.launch { reloadCampaignConfig() }
+    }
+
+    /**
+     * Re-reads `Campagne.md` and rebuilds the info panel.
+     *
+     * Cheap enough to do on every INFO toggle, which is how an edit made in Obsidian — in
+     * the DeX split view, mid-session — shows up without Gamehost watching the filesystem.
+     */
+    private suspend fun reloadCampaignConfig() {
+        val config = campaignFile?.read() ?: CampaignConfig.EMPTY
+        _campaignConfig.value = config
+        _transitionSpec.value = TransitionSpec.byName(config.transition)
+
+        val info = config.info
+        if (info == null || info.isEmpty) {
+            presentation.setInfo(null, null)
+            return
+        }
+
+        // Resolved here, not in the renderer: a Frame must arrive fully determined, and a
+        // path lookup is exactly the kind of work that could come out differently in the
+        // two windows.
+        val background = info.background
+            ?.let { path -> _repository.value?.resolve(path)?.id }
+
+        presentation.setInfo(CampaignInfo.build(info), background)
     }
 
     // ---- Slot actions -----------------------------------------------------------

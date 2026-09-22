@@ -20,7 +20,9 @@ Select → preview → show.
 - Tap an image to *show it now* or park it in one of **six slots**.
 - Tap a slot to put that image on the player display, from anywhere in the tree.
   Long-press a slot to empty it; assigning over one just overwrites it.
-- **NOIR** blanks the player display.
+- **INFO** replaces the image with a full-screen campaign panel — location, in-world date,
+  moon phase, whatever else you configure. It's a mode, not an overlay.
+- **NOIR** blanks the player display, and overrides INFO.
 - A live 16:9-or-whatever-your-display-actually-is preview of the player surface.
 
 No import, no database, no account, no network, no proprietary format. Delete Gamehost
@@ -73,15 +75,33 @@ Tout ce qui suit l'en-tête est à toi. Gamehost ne le lit pas.
   `watercolor`.
 - **`info`** — what the INFO button shows full-screen. Entries appear in the order you write
   them. Most are plain label/value rows, but a few names are understood: `title` becomes the
-  panel heading, `location` a headline, and `date` is written as an ISO date (`1127-03-12`)
+  panel heading, `location` a headline, and `date` is written as an ISO date (`1137-01-09`)
   and rendered in French with its weekday. With `show_lunar_state: true` the moon is drawn in
   its phase for that date.
+
+### Dates before 1582 are Julian
+
+`date:` follows the convention Wikipedia and historical lunar tables use: **Julian before
+15 October 1582, Gregorian from then on.** Write the date exactly as your sources give it.
+
+This matters more than it sounds. In the twelfth century the two calendars differ by seven
+days, so a full moon listed as 9 January 1137 falls on 16 January in the proleptic Gregorian
+calendar `java.time` uses. Gamehost converts internally before computing the phase, and
+displays the date you wrote — so the panel agrees with your notes and the moon agrees with
+the sky.
+
+The phase itself is a mean-synodic model and can be up to about a day out from a true new or
+full moon, because it assumes a perfectly uniform cycle and the real orbit is elliptical.
 - **`background`** — an image behind the info panel, relative to the campaign root. Black if
   omitted.
 
-> **Not read yet.** Transitions currently use the watercolor default and the INFO button stays
-> disabled. The reader for this file is the next change; the format above is what it will
-> expect.
+The file is read when a campaign folder is opened, and again each time you press INFO — so an
+edit made in Obsidian in the DeX split view shows up without restarting anything. A missing,
+malformed, or `gamehost`-less file is completely normal and simply means the defaults apply;
+Gamehost never fails to start because of it. The body below the frontmatter is yours: Gamehost
+reads only the header, and never writes to this file.
+
+The INFO button is enabled only when there is an `info:` block with something in it.
 
 ## Your files stay yours
 

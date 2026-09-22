@@ -1,5 +1,6 @@
 package com.gamehost.render
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,9 +45,9 @@ import kotlin.math.roundToInt
  *  - never branch on which window it is being drawn in;
  *  - never take an aspect-ratio parameter — the **caller** sizes the box;
  *  - never branch on a size. `DrawScope.size` may be read to apply a *uniform scale*, so
- *    that content laid out at one virtual resolution is merely scaled to each target, but
- *    a size must never change *what* is drawn, how it wraps, or how many of anything
- *    there are;
+ *    that content laid out at one virtual resolution is merely scaled to each target — see
+ *    [drawInfoPanel] — but a size must never change *what* is drawn, how text wraps, or how
+ *    many of anything there are;
  *  - never load an image without the caller's [model]. Coil keys its cache by request
  *    size, so a per-window default means two decodes that become ready at different
  *    moments — invisible with a hard cut, glaring through a dissolve. See
@@ -239,16 +240,21 @@ private fun FrameLayer(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            // The panel itself arrives with the campaign-info step; for now an INFO frame
-            // draws its background image, or black.
-            is Frame.Info -> frame.background?.let { background ->
-                AsyncImage(
-                    model = model(background),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize(),
-                )
+            is Frame.Info -> {
+                frame.background?.let { background ->
+                    AsyncImage(
+                        model = model(background),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
+                val measurer = rememberPanelMeasurer()
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawInfoPanel(frame.panel, measurer)
+                }
             }
         }
     }

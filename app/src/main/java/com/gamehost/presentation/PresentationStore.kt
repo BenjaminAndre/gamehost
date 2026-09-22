@@ -70,6 +70,18 @@ class PresentationStore(
         )
     }
 
+    /**
+     * Loads the campaign info panel.
+     *
+     * Not on [PresentationController]: that interface is the list of things a *GM* can do,
+     * and this is data arriving from `Campagne.md`. While the scene is showing an image it
+     * changes no frame and so stamps no transition; re-reading the file *while* the panel is
+     * up does change the frame, and dissolving to the updated panel is the right thing.
+     */
+    fun setInfo(panel: InfoPanel?, background: ContentId?) = change {
+        it.copy(scene = it.scene.copy(info = panel, infoBackground = background))
+    }
+
     override fun setInfoMode(on: Boolean) = change {
         it.copy(
             scene = it.scene.copy(mode = if (on) SceneMode.Info else SceneMode.Visual),

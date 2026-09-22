@@ -155,7 +155,10 @@ GM Activity launches onto it, so "external" and "player" are not the same thing.
 - No `<uses-permission>` in the manifest. SAF grants are not permissions and there is no
   network. The empty list is a feature.
 - No user-facing string literal in Kotlin. Everything through `stringResource` (§21).
-- The player surface renders no text, ever. Its blank state is pure black.
+- The player surface renders no *application* text. Its blank state is pure black. The one
+  exception is the campaign info panel, which is campaign content, not application text
+  (§21.2) — and it is laid out at a fixed virtual resolution and uniformly scaled, so the
+  preview and the player window break lines in identical places.
 - `content/saf/DocumentTreeSource` is the only file that knows `DocumentsContract`
   exists, and every `ContentId` is a *document* URI built using the tree — never the raw
   tree URI, which has no document-id segment.
