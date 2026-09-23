@@ -12,6 +12,22 @@ the game. Brigade's one job is:
 The tablet is the GM surface; a wired HDMI display is the player surface. They are two
 independent render targets of a single presentation state — not a mirror.
 
+## Demo
+
+Tested with a chinese secondary monitor "UPERFECT" and my Samsung Galaxy Tab S7+ (with DisplayPort Alternative Mode, that's a requirement).
+It worked flawlessly, even with the app in the background. Failed to take a screenshot of the secondary monitor, but it's exactly as the preview screen.
+In the tiled mode, the left part is just Obsidian, reading the same file folders.
+
+
+<img width="2800" height="1752" alt="Screenshot_20260922_194930_Obsidian" src="https://github.com/user-attachments/assets/f361b5b1-73af-440c-833f-b296282c5272" />
+<img width="2800" height="1752" alt="Screenshot_20260922_194753_Gamehost" src="https://github.com/user-attachments/assets/025c63bb-f14e-41a9-b49b-dcb1eb889d96" />
+
+
+https://github.com/user-attachments/assets/caa28161-16bc-4219-b9c4-7d64ca203d6f
+
+
+
+
 ## v0.1
 
 Select → preview → show.
