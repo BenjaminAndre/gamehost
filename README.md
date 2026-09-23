@@ -2,15 +2,17 @@
 
 **B**idouille **R**apide d'**I**mages et **G**estion d'**A**tmosphère pour **D**euxième **E**cran
 
-A small APK tool to help me host my ttrpg games.
+A small APK to help me run my tabletop games.
 
-Brigade is a **GM-facing presentation console**, not a VTT. The physical tabletop stays
-the game. Brigade's one job is:
+Brigade is a **GM-facing presentation console**, not a VTT. The physical tabletop stays the
+game. Its one job:
 
 > **The GM controls what the players see.**
 
 The tablet is the GM surface; a wired HDMI display is the player surface. They are two
 independent render targets of a single presentation state — not a mirror.
+
+The interface is French.
 
 ## Demo
 
@@ -26,48 +28,68 @@ In the tiled mode, the left part is just Obsidian, reading the same file folders
 https://github.com/user-attachments/assets/caa28161-16bc-4219-b9c4-7d64ca203d6f
 
 
+## Features
 
+**Campaign folder**
+- Pick any folder through the Storage Access Framework; the grant survives restarts.
+- Browse it as a tree — enter subfolders, or tap any breadcrumb to jump back, including to
+  the root from any depth.
+- Images and Markdown notes both appear and are both presentable.
+- **Actualiser** re-reads the folder and `Campagne.md`.
 
-## v0.1
+**Six slots**
+- Tap anything in the browser to *show it now* or park it in a slot.
+- Tap a slot to put it on the player display, from anywhere in the tree.
+- Long-press a slot to empty it; assigning over one overwrites it.
+- Slots are stored as paths in the campaign folder, so they travel with the campaign and
+  survive a reinstall.
 
-Select → preview → show.
+**Player display**
+- Fullscreen output to a wired HDMI display, with the tablet fully interactive beside it.
+- Images are fitted, never distorted, and letterboxed in black.
+- Keeps working when Brigade is backgrounded, and restores the scene when the cable comes
+  back.
+- Without a second display the app still works: the preview stays live under an «Aucun écran
+  joueur» banner.
 
-- Pick a campaign folder through the Storage Access Framework; the grant persists.
-- Browse it as a tree: enter subfolders, or tap any breadcrumb to jump straight back,
-  including to the campaign root from any depth.
-- Tap an image to *show it now* or park it in one of **six slots**.
-- Tap a slot to put that image on the player display, from anywhere in the tree.
-  Long-press a slot to empty it; assigning over one just overwrites it.
-- **INFO** replaces the image with a full-screen campaign panel — location, in-world date,
-  moon phase, whatever else you configure. It's a mode, not an overlay. With no campaign
-  info configured it shows black, so it doubles as the blank control: *nothing specific,
-  I'm preparing*.
-- A live 16:9-or-whatever-your-display-actually-is preview of the player surface.
+**Preview**
+- A live view of the player surface, at the real display's aspect ratio.
+- Shows the presentation state in every case — never a placeholder.
 
-No import, no database, no account, no network, no proprietary format. Delete Brigade
-and the campaign folder is still a perfectly ordinary folder.
+**INFO**
+- Replaces the image with a full-screen campaign panel: title, location, in-world date in
+  French, and the moon drawn in its true phase for that date.
+- With no campaign info configured it shows black, so it doubles as the blank control —
+  *nothing specific, I'm preparing*.
 
-The interface is French. See `DESIGN_REQUIREMENTS.md` §21.
+**Markdown notes**
+- Recalling a note shows the players the first image it links that resolves.
+- Obsidian `![[Jade-Fox.png]]` (found by filename anywhere in the campaign) and
+  `![](../Portraits/Jade-Fox.png)` (relative to the note) both work.
+- A GM-only bar above the preview shows date · name · element · faction. Nothing of it
+  reaches the player display.
+- A note with no image shows black and still fills the bar — useful for lore or secrets.
 
-## Transitions
+**Transitions**
+- A **watercolor dissolve** between everything the player surface shows: a threshold sweeping
+  a soft noise field, so the incoming image bleeds in rather than fading uniformly.
+- `cut`, `fade` and `watercolor` available; the campaign picks one by name.
 
-Changing what the players see cross-dissolves rather than cutting. The default is a
-**watercolor dissolve**: an animated threshold sweeps across a soft noise field, so the
-incoming image bleeds in through an irregular front rather than fading uniformly.
+**SABLIER**
+- An incense stick burning down the edge of the player display: 1, 2 or 5 minutes.
+- No numbers for the players — the stick reads faster across a table. The GM sees the exact
+  time on the button.
+- «Encore 1 minute» lengthens it in place rather than resetting it.
+- Keeps burning through scene changes, INFO and blanking.
 
-It applies to *every* change of the player surface, uniformly — image to image, image to
-the info panel, image to black — because the transition belongs to the surface, not to
-images. There is no clamped special case.
-
-The available transitions are `cut`, `fade` and `watercolor`. There is no transition editor
-and there won't be one: a campaign picks one by name, and a new one is added to the app when
-a real campaign needs it.
+**Deliberately absent** — no import, no database, no account, no network, no permissions, no
+proprietary format. Delete Brigade and the campaign folder is still an ordinary folder.
 
 ## Campaign file
 
-Brigade reads one optional file at the campaign root: **`Campagne.md`**. Everything it
-cares about lives in YAML frontmatter under a `brigade:` key, so the file stays a perfectly
-ordinary Markdown note that Obsidian renders with properties, and the body is yours.
+One optional file at the campaign root: **`Campagne.md`**. Everything Brigade reads lives in
+YAML frontmatter under a `brigade:` key, so the file stays an ordinary note that Obsidian
+renders with properties.
 
 ```markdown
 ---
@@ -88,51 +110,19 @@ brigade:
 Tout ce qui suit l'en-tête est à toi. Brigade ne le lit pas.
 ```
 
-- **`transition`** — `cut`, `fade` or `watercolor`. An unrecognised name falls back to `cut`,
-  deliberately: a typo should be visible rather than silently pretty. No file at all means
-  `watercolor`.
-- **`info`** — what the INFO button shows full-screen. Entries appear in the order you write
-  them. Most are plain label/value rows, but a few names are understood: `title` becomes the
-  panel heading, `location` a headline, and `date` is written as an ISO date (`1137-01-09`)
-  and rendered in French with its weekday. With `show_lunar_state: true` the moon is drawn in
-  its phase for that date.
-- **`background`** — an image behind the info panel, relative to the campaign root. Black if
-  omitted.
+- **`transition`** — `cut`, `fade` or `watercolor`. An unrecognised name falls back to `cut`
+  so a typo is visible. No file at all means `watercolor`.
+- **`info`** — what INFO shows. Entries appear in the order written; most are plain
+  label/value rows, but `title` becomes the heading, `location` a headline, and `date` is
+  written out in French with its weekday.
+- **`show_lunar_state`** — draws the moon in its phase for `date`.
+- **`background`** — an image behind the panel, relative to the campaign root.
 
-### Dates before 1582 are Julian
-
-`date:` follows the convention Wikipedia and historical lunar tables use: **Julian before
-15 October 1582, Gregorian from then on.** Write the date exactly as your sources give it.
-
-This matters more than it sounds. In the twelfth century the two calendars differ by seven
-days, so a full moon listed as 9 January 1137 falls on 16 January in the proleptic Gregorian
-calendar `java.time` uses. Brigade converts internally before computing the phase, and
-displays the date you wrote — so the panel agrees with your notes and the moon agrees with
-the sky.
-
-The phase itself is a mean-synodic model and can be up to about a day out from a true new or
-full moon, because it assumes a perfectly uniform cycle and the real orbit is elliptical.
-
-The file is re-read when the campaign folder is opened, when Brigade comes back to the
-foreground, when you press **Actualiser**, and each time you press INFO. So editing it in
-Obsidian in the DeX split view and switching back is enough — there is nothing to reload. A missing,
-malformed, or `brigade`-less file is completely normal and simply means the defaults apply;
-Brigade never fails to start because of it. The body below the frontmatter is yours: Brigade
-reads only the header, and never writes to this file.
-
-The INFO button is enabled only when there is an `info:` block with something in it.
+Re-read when the folder is opened, when Brigade returns to the foreground, on **Actualiser**,
+and on every INFO press. A missing or malformed file is normal and simply means the defaults
+apply.
 
 ## Notes
-
-Markdown notes appear in the browser alongside images and go into slots the same way.
-Recalling a note shows the players **the first image it links** — and gives you a small bar
-above the preview:
-
-```
-1137-01-09 · Jade-Fox · ⚔️ · Secte du Lotus
-```
-
-That bar is yours alone; nothing of it reaches the player display.
 
 ```markdown
 ---
@@ -147,38 +137,37 @@ faction: Secte du Lotus
 Le magistrat sait qu'elle ment.
 ```
 
-- **Name** is the filename, so you rename a character by renaming the file.
-- **`element`** — one of `Terre` 🪨 `Feu` 🔥 `Eau` 💧 `Métal` ⚔️ `Bois` 🌳, matched ignoring
-  case and accents. An unrecognised value shows as text, so a typo is visible.
-- **`faction`** is shown in red.
-- **Date** is the campaign's, from `Campagne.md` — not per-note. Slightly wrong semantically,
-  consistently right everywhere.
-- Keys are English, values are yours.
+- **Name** is the filename — rename a character by renaming the file.
+- **`element`** — `Terre` 🪨 `Feu` 🔥 `Eau` 💧 `Métal` ⚔️ `Bois` 🌳, matched ignoring case and
+  accents. An unrecognised value shows as text.
+- **`faction`** — shown in its own colour.
+- **Date** in the bar is the campaign's, from `Campagne.md`, not per-note.
+- Keys are English; values are yours and are never translated.
 
-Both link syntaxes work: Obsidian's `![[Jade-Fox.png]]`, resolved by filename anywhere in the
-campaign, and `![](../Portraits/Jade-Fox.png)`, resolved relative to the note. The first link
-that actually **resolves** wins, so a broken link or a web URL is skipped rather than leaving
-the players on black. A note linking no image at all shows black and still fills the bar —
-which is the useful case for a secrets or lore note.
+## Dates before 1582 are Julian
 
-Notes show as filenames in the browser, without a thumbnail: drawing one would mean reading
-every note in the folder to paint a single screen. Slots do show the image, since there are
-only six.
+`date:` follows the convention Wikipedia and historical lunar tables use: **Julian before
+15 October 1582, Gregorian after.** Write the date exactly as your sources give it.
+
+In the twelfth century the calendars differ by seven days, so a full moon listed as 9 January
+1137 falls on 16 January in the proleptic Gregorian calendar `java.time` uses. Brigade
+converts internally and displays what you wrote — the panel agrees with your notes and the
+moon agrees with the sky.
+
+The phase is a mean-synodic model, accurate to about a day.
 
 ## Your files stay yours
 
-Campaign content is read where it lies and never copied, moved or modified. `Campagne.md` is
-yours — Brigade reads it and never writes to it.
+Campaign content is read where it lies and never copied, moved or modified. `Campagne.md` and
+your notes are yours — Brigade reads them and never writes to them.
 
-The single file Brigade creates is `.brigade/slots.json` in the campaign root, which holds
-the six slots as paths relative to that root — readable, Git-diffable, and portable to
-another device. Commit it or ignore it; Brigade does not care.
+The single file Brigade creates is `.brigade/slots.json` in the campaign root: the six slots
+as paths relative to that root, readable and Git-diffable. Commit it or ignore it.
 
 ## Building
 
-Open in Android Studio (JDK 17, `compileSdk 35`, `minSdk 30`). The Gradle wrapper JAR is
-not committed yet — Android Studio generates it on first sync, and CI provisions Gradle
-directly, so neither path needs it.
+Open in Android Studio (JDK 17, `compileSdk 35`, `minSdk 30`). The Gradle wrapper JAR is not
+committed — Android Studio generates it on first sync, and CI provisions Gradle directly.
 
 ```bash
 ./gradlew test
@@ -191,21 +180,19 @@ directly, so neither path needs it.
 ## Installing on the tablet
 
 Every push to `main` builds and publishes a debug APK to the rolling
-[`latest`](https://github.com/BenjaminAndre/gamehost/releases/tag/latest) prerelease. The
-URL is stable, so it can be bookmarked on the tablet: open it, download `app-debug.apk`,
-install. You may need to allow installs from unknown sources for your browser.
+[`latest`](https://github.com/BenjaminAndre/brigade/releases/tag/latest) prerelease. The URL
+is stable, so it can be bookmarked on the tablet: open it, download `app-debug.apk`, install.
+You may need to allow installs from unknown sources for your browser.
 
 ## Development without the hardware
 
-Most of the interesting logic is pure Kotlin and runs under `./gradlew test` with no
-device. For the player display itself, **Settings → Developer options → Simulate
-secondary displays** creates a real display with `FLAG_PRESENTATION` that the production
-code path drives unmodified — no second code path, nothing to drift.
-
-Without one, the app still works: the control bar is live and the preview keeps
-rendering, with an «Aucun écran joueur» banner over it.
+Most of the interesting logic is pure Kotlin and runs under `./gradlew test` with no device.
+For the player display itself, **Settings → Developer options → Simulate secondary displays**
+creates a real display with `FLAG_PRESENTATION` that the production code path drives
+unmodified — no second code path, nothing to drift.
 
 ## Documents
 
+- `CHANGELOG.md` — what changed, and when.
 - `DESIGN_REQUIREMENTS.md` — what Brigade is, and the ten traps it must not fall into.
 - `ARCHITECTURE.md` — how that was translated into code, and the rules that hold it.
