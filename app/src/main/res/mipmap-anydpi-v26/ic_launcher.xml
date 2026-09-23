@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- minSdk is 30, so this adaptive icon matches on every supported device and no
-     density-specific PNG fallbacks are needed. -->
+<!--
+    minSdk is 30, so this adaptive icon matches on every supported device and no legacy
+    density-specific launcher PNG is needed.
+
+    The foreground layers are generated from icon.png at the repo root: its white margin is
+    cropped off, and the artwork is placed in the inner 72dp of the 108dp layer — the area
+    every launcher mask is guaranteed to show. The background is the artwork's own frame
+    colour, so whatever shape a launcher masks to, the surround blends into the artwork's
+    border instead of framing it a second time.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>

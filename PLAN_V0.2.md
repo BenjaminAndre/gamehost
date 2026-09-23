@@ -1,4 +1,4 @@
-# Gamehost v0.2 — implementation plan
+# Brigade v0.2 — implementation plan
 
 Two features: a full-screen **campaign info mode**, and **configurable transitions** whose first
 implementation is a watercolor dissolve.
@@ -12,7 +12,7 @@ and `ARCHITECTURE.md` remain the permanent records.
 
 | | Decision |
 |---|---|
-| Config file | `<campaign root>/Campagne.md`, YAML frontmatter under a `gamehost:` key |
+| Config file | `<campaign root>/Campagne.md`, YAML frontmatter under a `brigade:` key |
 | YAML parser | snakeyaml |
 | INFO | **A full-screen mode that replaces the image**, not an overlay. May have its own background image; black otherwise. NOIR overrides it. |
 | Info entries | Free-form ordered label/value pairs, plus a few **known fields** with special rendering |
@@ -154,7 +154,7 @@ over a band around the threshold, spanning `1 + 2·band` so it saturates at both
 works and that modifier order is the crux — reversed, it silently draws nothing or a black rectangle.
 
 **The field.** One 256×256 field generated procedurally at startup by a process-wide `object` with
-`by lazy`, warmed off-main in `GamehostApp.onCreate`. Domain-warped fractal noise, histogram-equalised
+`by lazy`, warmed off-main in `BrigadeApp.onCreate`. Domain-warped fractal noise, histogram-equalised
 by binned CDF so the threshold sweeps at a uniform rate. Variation between consecutive dissolves comes
 from **four dihedral orientations via `DrawScope.scale(±1, ±1)`** — not `srcOffset`/`srcSize`, which
 can only crop and would change the apparent feature scale rather than mirror it.
@@ -175,7 +175,7 @@ entries* and reach `Success` at different moments. A dissolve reveals whatever i
 layer right now — so the two windows genuinely display different pixels for the first frames of every
 cold transition.
 
-This is latent in v0.1 already ([PresentationSurface.kt](app/src/main/java/com/gamehost/render/PresentationSurface.kt)
+This is latent in v0.1 already ([PresentationSurface.kt](app/src/main/java/com/brigade/render/PresentationSurface.kt)
 uses the default `model = { it.value }` at both call sites). A transition is what makes it visible.
 
 **The injection point already exists and neither design used it.** `PresentationSurface` takes
@@ -194,7 +194,7 @@ untouched. It also makes the prefetch actually warm the entry both windows use.
 
 ```markdown
 ---
-gamehost:
+brigade:
   transition: watercolor
   info:
     background: Fonds/parchemin.jpg
@@ -207,7 +207,7 @@ gamehost:
 
 # Campagne du Renard de Jade
 
-Tes notes libres. Gamehost ne lit que l'en-tête.
+Tes notes libres. Brigade ne lit que l'en-tête.
 ```
 
 ### Reading
@@ -222,7 +222,7 @@ this keeps `org.yaml` out of `content/` and `presentation/`. It returns a plain 
   there is no reason to accept it.
 - Re-read on every INFO toggle, so an edit made in Obsidian in the DeX split view appears with no file
   watching.
-- Missing, malformed, or no `gamehost` key → INFO is **disabled** in the control bar rather than
+- Missing, malformed, or no `brigade` key → INFO is **disabled** in the control bar rather than
   showing an empty panel. A parse failure surfaces as a GM-side message, never a crash.
 
 ### Known fields
@@ -287,8 +287,8 @@ rule goes into the `PresentationSurface` KDoc, not into the info code where it w
 no text, ever."* INFO makes that false. Amend **in the same commit that lands INFO**:
 
 > The **blank** state of the player display is pure black, never a localised message. Campaign info is
-> the one text the player surface renders; it is campaign content, is not localised by Gamehost
-> (§21.3), and its only Gamehost-generated strings are locale-formatted dates.
+> the one text the player surface renders; it is campaign content, is not localised by Brigade
+> (§21.3), and its only Brigade-generated strings are locale-formatted dates.
 
 Also note in §21.1 that a date formatted via `java.time` + `Locale` is not a string literal and needs
 no resource. And rewrite the "never read any size" paragraph of the `PresentationSurface` KDoc **once**
@@ -344,7 +344,7 @@ running that test is the only way it is ever checked.
 **Unit (CI):** `frame()` projection, *especially* `blackout` overriding `mode == Info` · moon phase
 for a pre-1970 date returning `[0,1)` (the `.mod()` regression) · moon phase at a known modern new
 moon and the full moon ~14.77 days later · French date formatting · frontmatter extraction including
-absent/malformed/no-`gamehost` files · the known-field registry falling back to label/value · the
+absent/malformed/no-`brigade` files · the known-field registry falling back to label/value · the
 active-control function · snapshot forcing `Visual` · the transition ramp saturating at both ends ·
 the wash field's value distribution.
 

@@ -5,7 +5,7 @@ requirements were translated into code, and the rules that keep them true.
 
 ## One Gradle module, package boundaries by rule
 
-Gamehost is a single `:app` module whose packages are laid out as the module graph it
+Brigade is a single `:app` module whose packages are laid out as the module graph it
 *would* have. What makes code refactorable is the dependency graph, not the module
 graph; at this size a four-module split costs four build files, four manifests and an
 `api`/`implementation` decision on every new type, paid daily, for a benefit paid never.
@@ -68,9 +68,12 @@ identical-output claim a property rather than a convention.
 `PresentationState.frame()` projects state to a `Frame` — `Black`, `Picture` or `Info` —
 and that projection is the *only* thing renderers consult. It replaced `effectiveVisual()`,
 which returned a `VisualPresentation` and therefore could not express "black" distinctly
-from "no image": a transition written against it cannot tell blanking apart from an empty
-scene, and `NOIR` silently stops overriding anything. `frame()`'s first branch is
-`blackout`, before any mode dispatch, and that branch is covered by a test.
+from "no image": a transition written against it cannot tell an intentionally blank screen
+apart from an empty scene.
+
+There is no separate blank control and no `blackout` flag. INFO *is* the blank control: a
+campaign with no info configured projects to `Frame.Black`, which is the
+"nothing specific, I'm preparing" state. One mode, one branch, one thing to test.
 
 ### Transitions
 
@@ -108,6 +111,26 @@ resolution would decode a battle map at full size for a 132 dp cell.
 | `BrowsingState` | `GmViewModel` + `SavedStateHandle` | Activity — dying with the UI is correct |
 | grid scroll, open dialog | `remember` / `rememberSaveable` | composition |
 
+### Notes resolve before a Frame exists
+
+A Markdown note becomes an image *before* `frame()` runs, so `Frame`, `PresentationSurface`
+and both render targets needed no change at all to support notes — the players simply see a
+picture.
+
+The GM bar rides on `Scene.note`, and `frame()` does not consult it. That is why the bar
+cannot leak onto the player display: `Frame` has no document field, so there is no
+representation in which it could arrive. The guarantee is structural, not a convention.
+
+The campaign date is deliberately **not** stored on `NoteBar`. It is campaign state, composed
+at render time from the live config — carrying it would leave every already-resolved slot
+showing the in-world date it happened to be resolved on.
+
+Obsidian's `![[…]]` means "the file with this name, anywhere", not a path, so
+`ContentRepository` keeps a lazily-built filename index over the whole tree, cleared by the
+same `invalidate()` as the folder cache. Relative `![](…)` targets are resolved by pure string
+arithmetic in `ContentPath.relativeTo` rather than by walking parents — which is both simpler
+and testable on the JVM.
+
 ## Browsing and presentation cannot touch each other
 
 §16 Trap 4 is structural here rather than aspirational. Tapping a thumbnail opens the
@@ -126,8 +149,8 @@ projector previews as 16:10 (§16 Trap 6).
 | What | Where | Why |
 |---|---|---|
 | Campaign root URI | app-private `SharedPreferences` | belongs to the install, not the campaign |
-| Last presentation | app-private `SharedPreferences` | session scratch; restored blanked |
-| **Slot bank** | `<campaign>/.gamehost/slots.json` | points at campaign content, so it travels with it (§2.3) |
+| Last presentation | app-private `SharedPreferences` | session scratch; restored on INFO |
+| **Slot bank** | `<campaign>/.brigade/slots.json` | points at campaign content, so it travels with it (§2.3) |
 
 Slots store **paths relative to the campaign root, never document URIs**. A document URI
 is provider-specific and survives neither a folder move, a reinstall, nor the campaign

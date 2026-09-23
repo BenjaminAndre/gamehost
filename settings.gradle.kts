@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Gamehost"
+rootProject.name = "Brigade"
 include(":app")

@@ -1,21 +1,21 @@
 
-# Gamehost
+# Brigade
 
 ## 1. Product concept
 
-Gamehost is a **GM-facing presentation and interaction layer for tabletop RPGs**.
+Brigade is a **GM-facing presentation and interaction layer for tabletop RPGs**.
 
 It is not a VTT.
 
 A VTT attempts to represent the complete state of a tabletop game digitally: characters, maps, tokens, combat, rules, dice, initiative, etc.
 
-Gamehost has a deliberately narrower purpose:
+Brigade has a deliberately narrower purpose:
 
 > **The GM controls what the players see and hear.**
 
 The physical tabletop remains the actual game environment.
 
-Gamehost is closer to a **director's console** than a virtual tabletop.
+Brigade is closer to a **director's console** than a virtual tabletop.
 
 The first version has exactly one job:
 
@@ -29,7 +29,7 @@ Future capabilities may include music, sound effects, Markdown handouts, scene c
 
 ### 2.1 Files are the content
 
-Gamehost does not own campaign data.
+Brigade does not own campaign data.
 
 Campaign content exists as ordinary files in ordinary folders.
 
@@ -50,13 +50,13 @@ Potential future formats:
 
 The application is a **view and interaction layer over those files**.
 
-The user should be able to delete Gamehost and retain a perfectly usable campaign folder.
+The user should be able to delete Brigade and retain a perfectly usable campaign folder.
 
 ### 2.2 Open formats
 
 Do not create a proprietary campaign database.
 
-Do not require importing content into Gamehost.
+Do not require importing content into Brigade.
 
 Do not duplicate campaign assets into an application-specific library.
 
@@ -75,11 +75,11 @@ A campaign should remain usable with:
 
 The campaign directory should be suitable for ordinary Git version control.
 
-Gamehost should therefore avoid modifying campaign files unless explicitly requested.
+Brigade should therefore avoid modifying campaign files unless explicitly requested.
 
-If Gamehost needs application-specific state, keep it separate from campaign content.
+If Brigade needs application-specific state, keep it separate from campaign content.
 
-Prefer a small optional `.gamehost/` directory for ephemeral/session-specific state rather than embedding metadata into every campaign file.
+Prefer a small optional `.brigade/` directory for ephemeral/session-specific state rather than embedding metadata into every campaign file.
 
 The application must never require a proprietary database for normal operation.
 
@@ -220,7 +220,7 @@ Suggested layout:
 │         (actual player display ratio)      │
 │                                            │
 ├────────────────────────────────────────────┤
-│  [BLACK]  [1][2][3][4][5][6]               │
+│  [INFO]  [1][2][3][4][5][6]                │
 └────────────────────────────────────────────┘
 ```
 
@@ -230,13 +230,13 @@ The architecture must not depend on this exact layout.
 
 ## 6.1 The slot bank
 
-The control bar holds a **blank control plus six slots**, each slot showing a mini-preview of the image assigned to it.
+The control bar holds an **INFO control plus six slots**, each slot showing a mini-preview of the image assigned to it.
 
 * **Assigning:** in the content browser, tapping an image opens a menu offering *Show now* or *Slot 1…6*.
 * **Recalling:** tapping a slot in the control bar presents that image immediately.
 * **Clearing:** long-pressing a slot empties it. Assigning to an occupied slot overwrites it.
 * *Show now* is transient: it changes what the players see without touching the bank.
-* The **blank/black control is permanent** and is not a slot.
+* The **INFO control is permanent** and is not a slot. It is also the blank control (§22.1).
 
 There is no previous/next navigation. The slot bank replaces it.
 
@@ -244,14 +244,14 @@ This makes Trap 4 structural rather than aspirational: tapping a thumbnail no lo
 
 The slot bank is also what makes a deep campaign tree usable at the table: a slot is resolved independently of where the GM is currently browsing, so one tap reaches an image several folders away.
 
-The currently live slot (or the blank state) must be visually indicated. That indicator is a readout of **presentation state**, not of what was last tapped.
+The currently live slot (or INFO) must be visually indicated. That indicator is a readout of **presentation state**, not of what was last tapped.
 
 ### Slot persistence
 
-The bank is **application state that points at campaign content**, so it is stored per campaign in the optional `.gamehost/` directory described in §2.3:
+The bank is **application state that points at campaign content**, so it is stored per campaign in the optional `.brigade/` directory described in §2.3:
 
 ```text
-<campaign root>/.gamehost/slots.json
+<campaign root>/.brigade/slots.json
 ```
 
 One bank per campaign root, shared across every subfolder. Navigating the tree never changes which bank is on screen.
@@ -273,7 +273,7 @@ The first milestone must support:
 5. Show that image on the external display.
 6. Show the same resulting image in the GM preview.
 7. Assign images to the six slots and recall them (§6.1). No previous/next navigation.
-8. Blank/black player display.
+8. Blank the player display — via the INFO control (§22.1), which shows black when no campaign info is configured.
 9. Restore the selected content after ordinary UI recomposition/configuration where practical.
 
 Nothing else is required for v0.1.
@@ -290,7 +290,7 @@ Persist the resulting URI permission so the folder remains available after resta
 
 Do not request `MANAGE_EXTERNAL_STORAGE` merely because it is convenient.
 
-The campaign is user-owned content, so Gamehost should work through Android's user-granted document access model.
+The campaign is user-owned content, so Brigade should work through Android's user-granted document access model.
 
 Important architectural consequence:
 
@@ -526,7 +526,7 @@ Do not implement Spotify access in v0.1.
 
 Markdown is content, not application state.
 
-Eventually Gamehost may render Markdown files and provide actions such as:
+Eventually Brigade may render Markdown files and provide actions such as:
 
 * show linked image
 * show handout
@@ -543,13 +543,13 @@ Example:
 The magistrate knows Jade Fox is lying.
 ```
 
-Gamehost may interpret the Markdown and provide presentation actions.
+Brigade may interpret the Markdown and provide presentation actions.
 
-However, the Markdown file must remain valid Markdown independently of Gamehost.
+However, the Markdown file must remain valid Markdown independently of Brigade.
 
 Do not require special proprietary syntax for basic content.
 
-If Gamehost-specific extensions are eventually required, keep them optional and clearly namespaced.
+If Brigade-specific extensions are eventually required, keep them optional and clearly namespaced.
 
 ---
 
@@ -651,7 +651,7 @@ The tablet and HDMI display are local.
 
 ## Trap 9: Premature Git integration
 
-Gamehost should be Git-compatible because it **doesn't interfere with the filesystem**.
+Brigade should be Git-compatible because it **doesn't interfere with the filesystem**.
 
 Do not implement a Git client initially.
 
@@ -791,7 +791,7 @@ A GM sitting at a table can:
 5. See exactly what the players are seeing in the preview.
 6. Have that image appear fullscreen on the external display.
 7. Change the displayed image without interacting with the player display.
-8. Blank the player display when necessary.
+8. Blank the player display when necessary, with the same INFO control.
 
 No campaign import.
 
@@ -809,7 +809,7 @@ Just:
 
 > **Select → preview → show.**
 
-That is Gamehost v0.1.
+That is Brigade v0.1.
 
 ---
 
@@ -819,13 +819,13 @@ The application must be localisable. Locale is **configurable, not hard-coded**.
 
 * The default locale is **French**.
 * All user-facing text is French.
-* The application name — **"Gamehost"** — is never translated.
+* The application name — **"Brigade"** — is never translated.
 
 ## 21.1 Architectural consequences
 
 **No user-facing string literal may appear in Kotlin source.** Every string goes through a string resource. This is the load-bearing rule; everything below is resource layout.
 
-French is the **base** resource set (`res/values/strings.xml`), not an override. A device set to any language Gamehost does not ship falls back to French. Adding a language later means adding `res/values-xx/` and changing no code.
+French is the **base** resource set (`res/values/strings.xml`), not an override. A device set to any language Brigade does not ship falls back to French. Adding a language later means adding `res/values-xx/` and changing no code.
 
 `app_name` is marked `translatable="false"`.
 
@@ -837,15 +837,15 @@ Any date or number formatting uses locale-aware formatters.
 
 The **blank** state of the player display is pure black — never a localised "no content" message. The player display carries no GM-facing information (§4).
 
-**Campaign info (§22.1) is the one text the player surface renders.** It is campaign content, not application text: Gamehost never translates it (§21.3), and the only strings Gamehost generates for it are locale-formatted dates.
+**Campaign info (§22.1) is the one text the player surface renders.** It is campaign content, not application text: Brigade never translates it (§21.3), and the only strings Brigade generates for it are locale-formatted dates.
 
-A date produced by `java.time` and a `Locale` is **not** a string literal and needs no string resource — §21.1's rule is about text Gamehost authors, not text it formats.
+A date produced by `java.time` and a `Locale` is **not** a string literal and needs no string resource — §21.1's rule is about text Brigade authors, not text it formats.
 
 ## 21.3 Campaign content is not localised
 
 File names, folder names and future Markdown are the user's own content.
 
-Gamehost never translates them and never assumes what language they are in.
+Brigade never translates them and never assumes what language they are in.
 
 ## 21.4 Localisation applies to the interface, not the codebase
 
@@ -863,9 +863,17 @@ Two additions, both driven by actual need at the table.
 
 A single **INFO** control in the bar. When enabled, the player display shows a full-screen campaign panel **instead of** the current image.
 
-It is a *mode*, composed into the scene alongside the visual — not an overlay layered on top. That is what makes "INFO, then back" return to the same image for free, exactly as blanking already does. **NOIR overrides INFO**, because the panic button overrides everything.
+It is a *mode*, composed into the scene alongside the visual — not an overlay layered on top. That is what makes "INFO, then back" return to the same image for free: the scene is covered, never discarded.
 
 The panel may specify its own background image; otherwise it is black.
+
+## INFO is also the blank control
+
+There is no separate blank or "black screen" button, and no blackout flag in the state.
+
+**A campaign with no info configured shows black when INFO is pressed.** That is the "nothing specific, I'm preparing" state a GM actually reaches for between scenes, so it does not need a control of its own — and a second button that only sometimes differs from the first is a worse interface than one that always does the same thing.
+
+The consequence, stated plainly: once a campaign *does* configure an info block, INFO shows the panel rather than black. A campaign wanting a truly empty screen configures no info block.
 
 Content comes from the campaign's own files (§22.3). Entries are free-form label/value pairs in the order the GM wrote them, plus a small set of known fields that earn special treatment by either **computing** something the GM would otherwise maintain by hand, or **formatting** something a generic row would render badly:
 
@@ -880,7 +888,7 @@ This is not a general-purpose overlay editor and must not become one. A new know
 
 `date` follows the convention of Wikipedia and historical lunar tables: **Julian before 15 October 1582, Gregorian from then on.** The GM writes the date exactly as their sources give it.
 
-In the twelfth century the calendars differ by **seven days**, so a full moon listed as 9 January 1137 falls on 16 January in the proleptic Gregorian calendar `java.time` uses. Gamehost converts internally before computing anything astronomical, and displays the date as written — so the panel agrees with the GM's notes and the Moon agrees with the sky.
+In the twelfth century the calendars differ by **seven days**, so a full moon listed as 9 January 1137 falls on 16 January in the proleptic Gregorian calendar `java.time` uses. Brigade converts internally before computing anything astronomical, and displays the date as written — so the panel agrees with the GM's notes and the Moon agrees with the sky.
 
 The phase is a mean-synodic model, accurate to about a day. That is far beyond what anyone at a table can check, and the honest alternative is a great deal of arithmetic for no visible gain.
 
@@ -888,7 +896,7 @@ The phase is a mean-synodic model, accurate to about a day. That is far beyond w
 
 Changing the player surface cross-dissolves rather than cutting. The first implementation is a **watercolor dissolve**, chosen because it belongs to the visual identity of a Song-dynasty wuxia campaign.
 
-The transition applies to **every** change of the player surface — image to image, image to info, image to black — because it is a property of the surface, not of images. Blanking is clamped to a fraction of the configured duration: nothing is readable in a few frames, and NOIR must stay a panic button.
+The transition applies to **every** change of the player surface — image to image, image to info, image to black — because it is a property of the surface, not of images. Uniformly: there is no clamped special case.
 
 The app contains a small fixed set of transitions — `cut`, `fade`, `watercolor` — and a campaign picks one **by name**. There is no transition authoring system, and an unrecognised name falls back to `cut` so that a typo is visible rather than silently pretty.
 
@@ -896,8 +904,56 @@ A new transition is added to the app when a real campaign needs one. Not before.
 
 ## 22.3 The campaign file
 
-One optional file at the campaign root, `Campagne.md`, with everything Gamehost-specific under a namespaced `gamehost:` key in YAML frontmatter (§15).
+One optional file at the campaign root, `Campagne.md`, with everything Brigade-specific under a namespaced `brigade:` key in YAML frontmatter (§15).
 
-It remains a perfectly ordinary Markdown note: Obsidian renders it with properties, the body belongs to the GM, and Gamehost reads it without ever writing to it. A missing or malformed file means the defaults apply and is never an error.
+It remains a perfectly ordinary Markdown note: Obsidian renders it with properties, the body belongs to the GM, and Brigade reads it without ever writing to it. A missing or malformed file means the defaults apply and is never an error.
 
-It is re-read whenever INFO is pressed, so an edit made in Obsidian mid-session appears without Gamehost watching the filesystem.
+It is re-read whenever INFO is pressed, whenever *Actualiser* is pressed, and whenever the GM surface returns to the foreground — so an edit made in Obsidian mid-session appears without Brigade watching the filesystem.
+
+A filesystem watch is deliberately **not** used. A `ContentObserver` over the Storage Access Framework is unreliable across document providers, and re-reading on resume catches every case that actually occurs at a table, for one small file read.
+
+---
+
+# 23. Markdown notes
+
+Notes are browsable and presentable content, alongside images.
+
+## 23.1 What presenting a note means
+
+Recalling a note shows the players **the first image it links that resolves** — not the first one written, so a broken link or a web URL is skipped rather than blanking the display. A note linking no image shows black, which is the useful case for a secrets or lore note.
+
+Both link syntaxes are understood, because a campaign authored in Obsidian contains both:
+
+* `![[Jade-Fox.png]]` — resolved **by filename across the campaign**, as Obsidian does. Not a path.
+* `![](../Portraits/Jade-Fox.png)` — resolved as a path **relative to the note**.
+
+Duplicate filenames are legal, so the tie-break is fixed rather than incidental: **the note's own folder, then the shallowest path, then natural order.**
+
+Brigade only ever *reads* notes (§15). The note must remain valid Markdown, and Brigade renders none of its prose.
+
+## 23.2 The GM bar
+
+A small strip above the preview, visible only while a note is live, and identical whether the note was recalled from a slot or shown directly:
+
+```text
+1137-01-09 · Jade-Fox · ⚔️ · Secte du Lotus
+```
+
+It is **GM-facing only**, and structurally so: it lives on the scene, but `Frame` carries no document field and the projection ignores it, so there is no path by which it can reach the player display.
+
+Horizontally scrollable rather than truncating — a long faction name must not eat the character name.
+
+| Segment | Source |
+|---|---|
+| Date | The **campaign** date from `Campagne.md`, composed at render time |
+| Name | The note's **filename**, without extension |
+| Element | `element:` — one of Terre 🪨 Feu 🔥 Eau 💧 Métal ⚔️ Bois 🌳 |
+| Faction | `faction:`, in its own colour |
+
+Keys are English; values are the GM's own French and are never translated (§21.3). Element matching ignores case and accents, because a missing accent typed at speed would otherwise drop the segment with nothing on screen saying why. An unrecognised value shows as text — a typo must be visible.
+
+**The date is campaign state, not a note property.** It is deliberately not stored on the bar: baking it in would leave every already-resolved slot showing the in-world date it happened to be resolved on. The segment is therefore context rather than a fact about the note, which is a small semantic fudge accepted in exchange for one meaning everywhere.
+
+## 23.3 Notes are listed by name
+
+Note cells in the browser show a filename and no thumbnail. Rendering each note's first image would require reading every note in a folder to paint one screen. Slot mini-previews do show the image, because there are exactly six and they are already resolved.

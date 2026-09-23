@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.gamehost"
+    namespace = "com.brigade"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.gamehost"
+        applicationId = "com.brigade"
         // minSdk 30 costs nothing on the Tab S7+ (Android 12/13) and buys
         // createDisplayContext() + maximumWindowMetrics, the non-deprecated way to
         // read a display's pixel size, plus Activity.getDisplay().

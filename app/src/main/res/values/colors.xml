@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="window_background">#12141A</color>
-    <color name="ic_launcher_background">#1C1F26</color>
+    <!-- Sampled from icon.png's own frame, so the masked surround is indistinguishable
+         from the artwork's border. -->
+    <color name="ic_launcher_background">#0A255D</color>
 </resources>
