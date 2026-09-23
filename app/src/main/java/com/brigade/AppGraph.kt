@@ -3,6 +3,7 @@ package com.brigade
 import android.app.Application
 import android.net.Uri
 import com.brigade.content.CampaignConfig
+import com.brigade.content.ContentId
 import com.brigade.content.ContentItem
 import com.brigade.content.ContentKind
 import com.brigade.content.ContentPath
@@ -371,7 +372,7 @@ class AppGraph(private val app: Application) {
         if (item.kind == ContentKind.Markdown) {
             appScope.launch {
                 val presented = presentableFor(item, folder)
-                slots.markResolved(slot.id, item.displayName, presented.imageId, presented.note)
+                slots.markResolved(slot, item.displayName, presented.imageId, presented.note)
             }
         }
     }
