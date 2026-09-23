@@ -180,7 +180,7 @@ committed — Android Studio generates it on first sync, and CI provisions Gradl
 ## Installing on the tablet
 
 Every push to `main` builds and publishes a debug APK to the rolling
-[`latest`](https://github.com/BenjaminAndre/brigade/releases/tag/latest) prerelease. The URL
+[`latest`](https://github.com/BenjaminAndre/Brigade/releases/tag/latest) prerelease. The URL
 is stable, so it can be bookmarked on the tablet: open it, download `app-debug.apk`, install.
 You may need to allow installs from unknown sources for your browser.
 

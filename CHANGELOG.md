@@ -8,10 +8,15 @@ coarser than what follows.
 
 ---
 
+## 0.4.3
+
+- Corrected the repository name to its canonical `Brigade`. The lowercase URL worked through
+  a GitHub redirect, which warned on every push.
+
 ## 0.4.2
 
-- The GitHub repository was renamed to `brigade`. Updated the release link in `README.md`
-  and pointed the git remote at the new URL.
+- The GitHub repository was renamed. Updated the release link in `README.md` and pointed the
+  git remote at the new URL.
 
 ## 0.4.1
 
