@@ -88,6 +88,9 @@ class GmActivity : ComponentActivity() {
                         onRecall = graph::recall,
                         onClearSlot = graph::clearSlot,
                         onToggleInfo = graph::toggleInfo,
+                        onStartTimer = graph::startTimer,
+                        onExtendTimer = graph::extendTimer,
+                        onClearTimer = graph::clearTimer,
                         modifier = Modifier
                             .fillMaxSize()
                             .safeDrawingPadding(),

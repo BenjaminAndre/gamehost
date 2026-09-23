@@ -95,6 +95,13 @@ fun PresentationSurface(
         } else {
             Dissolve(transition, state.frame(), model)
         }
+
+        // Composed AFTER the layers, so a scene change does not dissolve the timer away
+        // with the image it happened to be burning over. The overlay is orthogonal to the
+        // picture — §14's third component — and outlives any of them.
+        state.scene.overlay?.let { overlay ->
+            IncenseTimer(overlay, Modifier.matchParentSize())
+        }
     }
 }
 

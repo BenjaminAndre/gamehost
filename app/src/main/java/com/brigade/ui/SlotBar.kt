@@ -17,6 +17,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +40,9 @@ import com.brigade.presentation.Slot
 import com.brigade.presentation.SlotBankState
 import com.brigade.presentation.SlotContent
 import com.brigade.presentation.SlotId
+import com.brigade.presentation.TimerOverlay
+import java.util.Locale
+import kotlinx.coroutines.delay
 
 private val BAR_HEIGHT = 84.dp
 private val MODE_BUTTON_WIDTH = 88.dp
@@ -52,9 +60,11 @@ private val MODE_BUTTON_WIDTH = 88.dp
 fun SlotBar(
     bank: SlotBankState,
     active: ActiveControl,
+    timer: TimerOverlay?,
     onRecall: (SlotId) -> Unit,
     onClear: (SlotId) -> Unit,
     onToggleInfo: () -> Unit,
+    onOpenTimer: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -89,6 +99,30 @@ fun SlotBar(
             )
         }
 
+        Button(
+            onClick = onOpenTimer,
+            shape = RoundedCornerShape(6.dp),
+            colors = if (timer != null) {
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                )
+            } else {
+                ButtonDefaults.filledTonalButtonColors()
+            },
+            modifier = Modifier
+                .width(MODE_BUTTON_WIDTH)
+                .fillMaxHeight(),
+        ) {
+            // The players get a stick, the GM gets the number. Text is free on this side,
+            // and knowing it is 1:47 rather than "about a third left" is worth having.
+            Text(
+                text = rememberRemainingLabel(timer) ?: stringResource(R.string.control_timer),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
+        }
+
         bank.slots.forEach { slot ->
             SlotCell(
                 slot = slot,
@@ -101,6 +135,31 @@ fun SlotBar(
             )
         }
     }
+}
+
+/**
+ * `M:SS` while the incense burns, null when none is lit.
+ *
+ * Ticks twice a second and recomposes only this one button. The player surface is unaffected:
+ * it reads the same [TimerOverlay] but derives the stick's length in its draw phase.
+ */
+@Composable
+private fun rememberRemainingLabel(timer: TimerOverlay?): String? {
+    if (timer == null) return null
+
+    var label by remember(timer) { mutableStateOf(formatRemaining(timer)) }
+    LaunchedEffect(timer) {
+        while (true) {
+            label = formatRemaining(timer)
+            delay(500)
+        }
+    }
+    return label
+}
+
+private fun formatRemaining(timer: TimerOverlay): String {
+    val totalSeconds = (timer.remainingMillisAt(System.nanoTime()) + 999L) / 1000L
+    return String.format(Locale.ROOT, "%d:%02d", totalSeconds / 60, totalSeconds % 60)
 }
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -39,6 +39,13 @@
 
     <!-- Control bar -->
     <string name="control_info">INFO</string>
+    <string name="control_timer">SABLIER</string>
+
+    <!-- Timer -->
+    <string name="timer_title">Sablier</string>
+    <string name="timer_minutes">%1$d min</string>
+    <string name="timer_extend">Encore 1 minute</string>
+    <string name="timer_stop">Arrêter</string>
     <string name="slot_empty">Emplacement %1$d, vide</string>
     <string name="slot_filled">Emplacement %1$d : %2$s</string>
     <string name="slot_missing">Fichier introuvable</string>

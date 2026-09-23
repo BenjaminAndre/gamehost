@@ -63,6 +63,16 @@ data class Scene(
      * update as the visual it describes.
      */
     val note: NoteBar? = null,
+
+    /**
+     * The burning incense timer, or null when none is lit.
+     *
+     * §14's third component. Orthogonal to [visual] on purpose: it is drawn *over* whatever
+     * is presented, so changing slot, entering INFO or blanking leaves it burning. `frame()`
+     * does not consult it — the picture and the overlay are independent — and the renderer
+     * draws it above the transition layers so a scene change does not dissolve it away.
+     */
+    val overlay: TimerOverlay? = null,
 )
 
 /**

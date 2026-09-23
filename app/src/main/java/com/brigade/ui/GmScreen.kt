@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,9 @@ fun GmScreen(
     onRecall: (SlotId) -> Unit,
     onClearSlot: (SlotId) -> Unit,
     onToggleInfo: () -> Unit,
+    onStartTimer: (minutes: Int) -> Unit,
+    onExtendTimer: () -> Unit,
+    onClearTimer: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (campaign) {
@@ -80,6 +84,7 @@ fun GmScreen(
     }
 
     var pendingItem by remember { mutableStateOf<ContentItem?>(null) }
+    var timerDialogOpen by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.padding(horizontal = 8.dp)) {
         FolderBar(
@@ -116,7 +121,15 @@ fun GmScreen(
         // window. BoxWithConstraints is fine *here*; the place it is forbidden is inside
         // PresentationSurface, where a size-dependent branch would break the
         // one-state-two-renderers guarantee.
-        BoxWithConstraints(modifier = Modifier.weight(1f)) {
+        // clipToBounds is a backstop, not the fix: nothing inside should ever exceed this
+        // box now that the preview fits explicitly. But this box sits directly above the
+        // slot bar, so an overflow here does not merely look wrong — it paints over the
+        // controls. Cheap insurance against the next layout change.
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .clipToBounds(),
+        ) {
             // Read maxHeight HERE, not inside the Column below. BoxWithConstraintsScope
             // and ColumnScope both carry @LayoutScopeMarker, so once ColumnScope is the
             // innermost receiver the DslMarker rules make maxHeight unreachable without
@@ -146,6 +159,11 @@ fun GmScreen(
                         campaignDateIso = campaignDateIso,
                         modifier = Modifier
                             .weight(0.38f)
+                            // fillMaxHeight so the pane has a real, finite height to fit
+                            // against. Without it the preview's only bound is its own width,
+                            // which in a wide-but-short window resolves to something taller
+                            // than the row.
+                            .fillMaxHeight()
                             .padding(top = 8.dp),
                     )
                 }
@@ -176,12 +194,33 @@ fun GmScreen(
         SlotBar(
             bank = bank,
             active = presentation.activeControl(),
+            timer = presentation.scene.overlay,
             onRecall = onRecall,
             onClear = onClearSlot,
             onToggleInfo = onToggleInfo,
+            onOpenTimer = { timerDialogOpen = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
+        )
+    }
+
+    if (timerDialogOpen) {
+        TimerDialog(
+            isRunning = presentation.scene.overlay != null,
+            onStart = { minutes ->
+                onStartTimer(minutes)
+                timerDialogOpen = false
+            },
+            onExtend = {
+                onExtendTimer()
+                timerDialogOpen = false
+            },
+            onStop = {
+                onClearTimer()
+                timerDialogOpen = false
+            },
+            onDismiss = { timerDialogOpen = false },
         )
     }
 

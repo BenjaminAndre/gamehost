@@ -28,6 +28,14 @@ interface PresentationController {
      */
     fun setInfoMode(on: Boolean)
 
+    /** Lights an incense timer of [minutes], replacing any already burning. */
+    fun startTimer(minutes: Int)
+
+    /** Lengthens the burning timer, or lights a fresh one if it has already burnt out. */
+    fun extendTimer()
+
+    fun clearTimer()
+
     fun setScaling(mode: ScalingMode)
 
     /** Drops the scene without changing whether the display is blanked. */
@@ -98,6 +106,28 @@ class PresentationStore(
     fun setInfo(panel: InfoPanel?, background: ContentId?) = change {
         it.copy(scene = it.scene.copy(info = panel, infoBackground = background))
     }
+
+    override fun startTimer(minutes: Int) = change {
+        it.copy(scene = it.scene.copy(overlay = TimerOverlay.ofMinutes(minutes, nowNanos())))
+    }
+
+    override fun extendTimer() = change {
+        val burning = it.scene.overlay ?: return@change it
+        val now = nowNanos()
+
+        // Extending a stick that has already burnt out lights a fresh one instead of adding
+        // to a duration the elapsed time has long overtaken — otherwise "another minute" on
+        // an expired timer would do nothing visible at all.
+        val extended = if (burning.isBurntOutAt(now)) {
+            TimerOverlay(startNanos = now, durationMillis = TimerOverlay.EXTEND_MILLIS)
+        } else {
+            burning.extendedBy(TimerOverlay.EXTEND_MILLIS)
+        }
+
+        it.copy(scene = it.scene.copy(overlay = extended))
+    }
+
+    override fun clearTimer() = change { it.copy(scene = it.scene.copy(overlay = null)) }
 
     override fun setInfoMode(on: Boolean) = change {
         it.copy(

@@ -322,6 +322,14 @@ class AppGraph(private val app: Application) {
         appScope.launch { reloadCampaignConfig() }
     }
 
+    // ---- Timer -------------------------------------------------------------------
+
+    fun startTimer(minutes: Int) = presentation.startTimer(minutes)
+
+    fun extendTimer() = presentation.extendTimer()
+
+    fun clearTimer() = presentation.clearTimer()
+
     fun toggleInfo() {
         // Toggled immediately, then the file is re-read in the background. A button that
         // waits on disk before doing anything is the wrong trade at a table; if the file did
